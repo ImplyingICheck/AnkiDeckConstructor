@@ -12,14 +12,14 @@ class Card:
                note_type=None, deck=None, guid=None):
     self.has_html = has_html
     self.tags = tags
-    self.field_names = self.__set_field_names(field_names, len(fields))
-    self.fields = fields
+    self.field_names = self.__generate_field_names(field_names, len(fields))
+    self.fields = self.__generate_field_dict(field_names, fields)
     self.note_type = note_type
     self.deck = deck
     self.guid = guid
 
   @staticmethod
-  def __set_field_names(field_names, n_fields):
+  def __generate_field_names(field_names, n_fields):
     if field_names:
       return field_names
     field_names = []
@@ -28,3 +28,9 @@ class Card:
       field_names.append(curr_field_name)
     return field_names
 
+  @staticmethod
+  def __generate_field_dict(field_names, fields):
+    field_dict = {}
+    for idx in range(len(field_names)):
+      field_dict[field_names[idx]] = fields[idx]
+    return field_dict
