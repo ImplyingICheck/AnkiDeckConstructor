@@ -34,3 +34,9 @@ class Card:
     for idx in range(len(field_names)):
       field_dict[field_names[idx]] = fields[idx]
     return field_dict
+
+  def get_field(self, field_name):
+    return self.fields[field_name]
+
+  def get_field_names(self):
+    return self.field_names
