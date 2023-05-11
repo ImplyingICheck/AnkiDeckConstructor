@@ -56,7 +56,3 @@ class Collection:
         deck = self.create_cards_from_tsv(f)
         decks.append(deck)
     return decks
-
-if __name__ == '__main__':
-  c = Collection('Selected Notes.txt')
-  c.print_decks()
