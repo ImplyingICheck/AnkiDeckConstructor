@@ -10,12 +10,12 @@ class Gaggle:
   Handles deck construction and organisation.
   """
   def __init__(self, exported_file=None):
-    self.decks = self.__generate_decks(exported_file)
+    self.decks = self.__initialise_decks(exported_file)
 
-  def __generate_decks(self, exported_file):
+  def __initialise_decks(self, exported_file):
     if not exported_file:
       return []
-    return self.parse_anki_export(exported_file)
+    return [self.parse_anki_export(exported_file)]
   def add_deck(self, deck):
     self.decks.append(deck)
   def add_deck_from_file(self, file):
@@ -53,10 +53,9 @@ class Gaggle:
     return deck
 
   def parse_anki_export(self, exported_file):
-    decks = []
+    deck = []
     with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
       header = self.parse_txt_file_header(f)
       if header['separator'] == 'tab':
         deck = self.create_cards_from_tsv(f)
-        decks.append(deck)
-    return decks
+    return deck
