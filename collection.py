@@ -17,6 +17,9 @@ class Collection:
     return self.parse_anki_export(exported_file)
   def add_deck(self, deck):
     self.decks.append(deck)
+  def add_deck_from_file(self, file):
+    deck = self.parse_anki_export(file)
+    self.add_deck(deck)
 
   def print_decks(self):
     for num, deck in enumerate(self.decks, start=1):
