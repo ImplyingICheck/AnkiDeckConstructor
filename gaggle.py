@@ -4,7 +4,7 @@ import ankicard
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
-class Collection:
+class Gaggle:
   """
   Parser class for Anki exported files.
   Handles deck construction and organisation.
