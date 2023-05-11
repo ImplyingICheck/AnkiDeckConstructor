@@ -1,6 +1,6 @@
 """Base class for Anki card"""
 
-class Card:
+class AnkiCard:
   """
   Anki Card fields as denoted by Anki documentation
   Up to date reference:
