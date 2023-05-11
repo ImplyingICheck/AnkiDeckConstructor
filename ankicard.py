@@ -17,7 +17,8 @@ class AnkiCard:
     self.note_type = note_type
     self.deck = deck
     self.guid = guid
-
+  def __repr__(self):
+    return str(self.fields)
   @staticmethod
   def __generate_field_names(field_names, n_fields):
     if field_names:
