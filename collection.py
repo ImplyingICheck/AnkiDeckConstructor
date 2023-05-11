@@ -15,6 +15,8 @@ class Collection:
     if not exported_file:
       return []
     return self.parse_anki_export(exported_file)
+  def add_deck(self, deck):
+    self.decks.append(deck)
 
   def print_decks(self):
     for num, deck in enumerate(self.decks, start=1):
