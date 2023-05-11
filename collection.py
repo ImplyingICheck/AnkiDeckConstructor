@@ -3,6 +3,7 @@ import csv
 import ankicard
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
+_ANKI_EXPORT_ENCODING = 'utf-8'
 class Collection:
   """
   Parser class for Anki exported files.
@@ -53,7 +54,7 @@ class Collection:
 
   def parse_anki_export(self, exported_file):
     decks = []
-    with open(exported_file, newline='', encoding='utf-8') as f:
+    with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
       header = self.parse_txt_file_header(f)
       if header['separator'] == 'tab':
         deck = self.create_cards_from_tsv(f)
