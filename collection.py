@@ -9,9 +9,9 @@ class Collection:
   Handles deck construction and organisation.
   """
   def __init__(self, exported_file=None):
-    self.decks = self.__set_decks(exported_file)
+    self.decks = self.__generate_decks(exported_file)
 
-  def __set_decks(self, exported_file):
+  def __generate_decks(self, exported_file):
     if not exported_file:
       return []
     return self.parse_anki_export(exported_file)
@@ -56,4 +56,5 @@ class Collection:
     return decks
 
 if __name__ == '__main__':
-  pass
+  c = Collection('Selected Notes.txt')
+  c.print_decks()
