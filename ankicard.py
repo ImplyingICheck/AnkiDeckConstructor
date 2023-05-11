@@ -13,7 +13,7 @@ class AnkiCard:
     self.has_html = has_html
     self.tags = tags
     self.field_names = self.__generate_field_names(field_names, len(fields))
-    self.fields = self.__generate_field_dict(field_names, fields)
+    self.fields = self.__generate_field_dict(self.field_names, fields)
     self.note_type = note_type
     self.deck = deck
     self.guid = guid
