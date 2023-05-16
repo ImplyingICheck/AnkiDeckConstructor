@@ -44,11 +44,11 @@ class Gaggle:
     return header
 
   @staticmethod
-  def create_cards_from_tsv(f):
+  def create_cards_from_tsv(f, field_names=None):
     cards = csv.reader(f, dialect='excel-tab')
     deck = []
     for card in cards:
-      card = ankicard.AnkiCard(card)
+      card = ankicard.AnkiCard(card, field_names=field_names)
       deck.append(card)
     return deck
 
