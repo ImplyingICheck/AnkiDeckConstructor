@@ -13,6 +13,12 @@ def _generate_field_names(field_names, n_fields):
     return field_names
 
 
+def _generate_field_dict(field_names, fields):
+  field_dict = {}
+  for idx in range(len(field_names)):
+    field_dict[field_names[idx]] = fields[idx]
+  return field_dict
+
 class AnkiCard:
   """
   Anki Card fields as denoted by Anki documentation
@@ -26,20 +32,13 @@ class AnkiCard:
     self.has_html = has_html
     self.tags_field_idx = tags_idx
     self.field_names = _generate_field_names(field_names, len(fields))
-    self.fields = self.__generate_field_dict(self.field_names, fields)
+    self.fields = _generate_field_dict(self.field_names, fields)
     self.note_type_field = note_type_idx
     self.deck_field_idx = deck_idx
     self.guid_field_idx = guid_idx
 
   def __repr__(self):
     return str(self.fields)
-
-  @staticmethod
-  def __generate_field_dict(field_names, fields):
-    field_dict = {}
-    for idx in range(len(field_names)):
-      field_dict[field_names[idx]] = fields[idx]
-    return field_dict
 
   def get_field(self, field_name):
     return self.fields[field_name]
