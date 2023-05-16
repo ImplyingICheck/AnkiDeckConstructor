@@ -7,26 +7,56 @@ _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
 
+def create_cards_from_tsv(f, field_names=None):
+  cards = csv.reader(f, dialect='excel-tab')
+  deck = []
+  for card in cards:
+    card = ankicard.AnkiCard(card, field_names=field_names)
+    deck.append(card)
+  return deck
+
+def parse_txt_file_header(f):
+  header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
+  header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
+  header = {}
+  reader_pos = f.tell()
+  while f.read(1) == header_symbol:
+    line = f.readline()
+    setting, value = line.split(header_separator)
+    value = value.rstrip()
+    header[setting] = value
+    reader_pos = f.tell()
+  f.seek(reader_pos)
+  return header
+
+def parse_anki_export(exported_file, field_names=None):
+  deck = []
+  with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
+    header = parse_txt_file_header(f)
+    if header['separator'] == 'tab':
+      deck = create_cards_from_tsv(f, field_names)
+  return deck
+
+def _initialise_decks(exported_file):
+  initial_deck = []
+  if not exported_file:
+    return initial_deck
+  initial_deck.append(parse_anki_export(exported_file))
+  return initial_deck
+
 class Gaggle:
   """
   Parser class for Anki exported files.
   Handles deck construction and organisation.
   """
   def __init__(self, exported_file=None):
-    self.decks = self.__initialise_decks(exported_file)
-
-  def __initialise_decks(self, exported_file):
-    initial_deck = []
-    if not exported_file:
-      return initial_deck
-    initial_deck.append(self.parse_anki_export(exported_file))
-    return initial_deck
+    self.decks = _initialise_decks(exported_file)
 
   def add_deck(self, deck):
     self.decks.append(deck)
 
   def add_deck_from_file(self, file):
-    deck = self.parse_anki_export(file)
+    deck = parse_anki_export(file)
     self.add_deck(deck)
 
   def print_decks(self):
@@ -34,35 +64,3 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
-
-  @staticmethod
-  def parse_txt_file_header(f):
-    header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
-    header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
-    header = {}
-    reader_pos = f.tell()
-    while f.read(1) == header_symbol:
-      line = f.readline()
-      setting, value = line.split(header_separator)
-      value = value.rstrip()
-      header[setting] = value
-      reader_pos = f.tell()
-    f.seek(reader_pos)
-    return header
-
-  @staticmethod
-  def create_cards_from_tsv(f, field_names=None):
-    cards = csv.reader(f, dialect='excel-tab')
-    deck = []
-    for card in cards:
-      card = ankicard.AnkiCard(card, field_names=field_names)
-      deck.append(card)
-    return deck
-
-  def parse_anki_export(self, exported_file, field_names=None):
-    deck = []
-    with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
-      header = self.parse_txt_file_header(f)
-      if header['separator'] == 'tab':
-        deck = self.create_cards_from_tsv(f, field_names)
-    return deck
