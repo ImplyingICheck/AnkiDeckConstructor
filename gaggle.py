@@ -13,9 +13,11 @@ class Gaggle:
     self.decks = self.__initialise_decks(exported_file)
 
   def __initialise_decks(self, exported_file):
+    initial_deck = []
     if not exported_file:
-      return []
-    return [self.parse_anki_export(exported_file)]
+      return initial_deck
+    initial_deck.append(self.parse_anki_export(exported_file))
+    return initial_deck
   def add_deck(self, deck):
     self.decks.append(deck)
   def add_deck_from_file(self, file):
