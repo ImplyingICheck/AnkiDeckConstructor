@@ -32,7 +32,7 @@ class AnkiCard:
                note_type_idx=None, deck_idx=None, guid_idx=None):
     self.has_html = has_html
     self.tags_field_idx = tags_idx
-    self.note_type_field = note_type_idx
+    self.note_type_field_idx = note_type_idx
     self.deck_field_idx = deck_idx
     self.guid_field_idx = guid_idx
     self.field_names = _generate_field_names(field_names, len(fields))
