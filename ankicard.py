@@ -8,15 +8,15 @@ class AnkiCard:
   Permanent Reference [09 May 2023]:
   https://github.com/ankitects/anki-manual/blob/0aa372146d10e299631e361769f41533a6d4a417/src/importing.md?plain=1#L196-L220
   """
-  def __init__(self, fields, has_html=False, tags=None, field_names=None,
-               note_type=None, deck=None, guid=None):
+  def __init__(self, fields, has_html=False, tags_idx=None, field_names=None,
+               note_type_idx=None, deck_idx=None, guid_idx=None):
     self.has_html = has_html
-    self.tags = tags
+    self.tags_field_idx = tags_idx
     self.field_names = self.__generate_field_names(field_names, len(fields))
     self.fields = self.__generate_field_dict(self.field_names, fields)
-    self.note_type = note_type
-    self.deck = deck
-    self.guid = guid
+    self.note_type_field = note_type_idx
+    self.deck_field_idx = deck_idx
+    self.guid_field_idx = guid_idx
   def __repr__(self):
     return str(self.fields)
   @staticmethod
