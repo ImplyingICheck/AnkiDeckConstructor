@@ -32,14 +32,22 @@ class AnkiCard:
                note_type_idx=None, deck_idx=None, guid_idx=None):
     self.has_html = has_html
     self.tags_field_idx = tags_idx
-    self.field_names = _generate_field_names(field_names, len(fields))
-    self.fields = _generate_field_dict(self.field_names, fields)
     self.note_type_field = note_type_idx
     self.deck_field_idx = deck_idx
     self.guid_field_idx = guid_idx
+    self.field_names = _generate_field_names(field_names, len(fields))
+    anki_header_names = {'Tags':tags_idx, 'Deck':deck_idx,
+                         'Note Type':note_type_idx, 'GUID':guid_idx}
+    self._overlay_anki_header_names(anki_header_names)
+    self.fields = _generate_field_dict(self.field_names, fields)
 
   def __repr__(self):
     return str(self.fields)
+
+  def _overlay_anki_header_names(self, anki_header_names):
+    for name, field_idx in anki_header_names.items():
+      if field_idx:
+        self.field_names[field_idx] = name
 
   def get_field(self, field_name):
     return self.fields[field_name]
