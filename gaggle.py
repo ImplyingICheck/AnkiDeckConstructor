@@ -6,12 +6,42 @@ import ankicard
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
+_ANKI_EXPORT_HEADER_SETTING_SEPARATOR = 'separator'
+_ANKI_EXPORT_HEADER_MAPPING = {
+  'html':'has_html', 'tags column':'tags_idx',
+  'notetype column':'note_type_idx', 'deck column':'deck_idx',
+  'guid column':'guid_idx'}
+_ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
 
-def create_cards_from_tsv(f, field_names=None):
+def convert_ankicol_to_gagglecol(ankicol_value):
+  try:
+    ankicol = int(ankicol_value)
+    gagglecol = ankicol - 1
+    return gagglecol
+  except ValueError:
+    return ankicol_value
+
+def reformat_header_settings(header):
+  reformated_settings = []
+  new_settings = {}
+  for setting in header.keys():
+    if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
+      value = header[setting]
+      new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
+      new_value = convert_ankicol_to_gagglecol(value)
+      new_settings[new_key] = new_value
+      reformated_settings.append(setting)
+  for setting in reformated_settings:
+    del header[setting]
+  del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
+  header.update(new_settings)
+
+def create_cards_from_tsv(f, field_names=None, header=None):
+  reformat_header_settings(header)
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
-    card = ankicard.AnkiCard(card, field_names=field_names)
+    card = ankicard.AnkiCard(card, field_names=field_names, **header)
     deck.append(card)
   return deck
 
@@ -34,7 +64,7 @@ def parse_anki_export(exported_file, field_names=None):
   with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_txt_file_header(f)
     if header['separator'] == 'tab':
-      deck = create_cards_from_tsv(f, field_names)
+      deck = create_cards_from_tsv(f, field_names=field_names, header=header)
   return deck
 
 def _initialise_decks(exported_file, field_names):
