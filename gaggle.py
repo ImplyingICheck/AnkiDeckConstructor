@@ -52,10 +52,10 @@ class Gaggle:
       deck.append(card)
     return deck
 
-  def parse_anki_export(self, exported_file):
+  def parse_anki_export(self, exported_file, field_names=None):
     deck = []
     with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
       header = self.parse_txt_file_header(f)
       if header['separator'] == 'tab':
-        deck = self.create_cards_from_tsv(f)
+        deck = self.create_cards_from_tsv(f, field_names)
     return deck
