@@ -1,9 +1,12 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 import csv
 import ankicard
+
+
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
+
 class Gaggle:
   """
   Parser class for Anki exported files.
@@ -18,8 +21,10 @@ class Gaggle:
       return initial_deck
     initial_deck.append(self.parse_anki_export(exported_file))
     return initial_deck
+
   def add_deck(self, deck):
     self.decks.append(deck)
+
   def add_deck_from_file(self, file):
     deck = self.parse_anki_export(file)
     self.add_deck(deck)
