@@ -19,6 +19,7 @@ def _generate_field_dict(field_names, fields):
     field_dict[field_names[idx]] = fields[idx]
   return field_dict
 
+
 class AnkiCard:
   """
   Anki Card fields as denoted by Anki documentation
