@@ -17,8 +17,10 @@ class AnkiCard:
     self.note_type_field = note_type_idx
     self.deck_field_idx = deck_idx
     self.guid_field_idx = guid_idx
+
   def __repr__(self):
     return str(self.fields)
+
   @staticmethod
   def __generate_field_names(field_names, n_fields):
     if field_names is None:
