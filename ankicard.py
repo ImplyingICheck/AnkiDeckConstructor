@@ -23,6 +23,7 @@ def _generate_field_dict(field_names, fields):
     field_dict[field_names[idx]] = fields[idx]
   return field_dict
 
+
 def _parse_bool(bool_as_str):
   if bool_as_str == _ANKI_HEADER_TRUE:
     return True
