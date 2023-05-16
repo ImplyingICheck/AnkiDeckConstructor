@@ -21,13 +21,16 @@ class AnkiCard:
     return str(self.fields)
   @staticmethod
   def __generate_field_names(field_names, n_fields):
-    if field_names:
+    if field_names is None:
+      field_names = []
+    if len(field_names) == n_fields:
       return field_names
-    field_names = []
-    for idx in range(n_fields):
-      curr_field_name = f'Field{idx}'
-      field_names.append(curr_field_name)
-    return field_names
+    else:
+      range_start = len(field_names)
+      range_stop = n_fields
+      for idx in range(range_start, range_stop):
+        field_names.append(f'Field{idx}')
+      return field_names
 
   @staticmethod
   def __generate_field_dict(field_names, fields):
