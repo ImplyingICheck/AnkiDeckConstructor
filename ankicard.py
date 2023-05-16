@@ -1,5 +1,9 @@
 """Base class for Anki card"""
 
+_ANKI_HEADER_TRUE = 'true'
+_ANKI_HEADER_FALSE = 'false'
+
+
 def _generate_field_names(field_names, n_fields):
   if field_names is None:
     field_names = []
@@ -19,6 +23,14 @@ def _generate_field_dict(field_names, fields):
     field_dict[field_names[idx]] = fields[idx]
   return field_dict
 
+def _parse_bool(bool_as_str):
+  if bool_as_str == _ANKI_HEADER_TRUE:
+    return True
+  elif bool_as_str == _ANKI_HEADER_FALSE:
+    return False
+  else:
+    return TypeError
+
 
 class AnkiCard:
   """
@@ -30,7 +42,7 @@ class AnkiCard:
   """
   def __init__(self, fields, has_html=False, tags_idx=None, field_names=None,
                note_type_idx=None, deck_idx=None, guid_idx=None):
-    self.has_html = has_html
+    self.has_html = _parse_bool(has_html)
     self.tags_field_idx = tags_idx
     self.note_type_field_idx = note_type_idx
     self.deck_field_idx = deck_idx
