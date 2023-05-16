@@ -37,11 +37,11 @@ def parse_anki_export(exported_file, field_names=None):
       deck = create_cards_from_tsv(f, field_names)
   return deck
 
-def _initialise_decks(exported_file):
+def _initialise_decks(exported_file, field_names):
   initial_deck = []
   if not exported_file:
     return initial_deck
-  initial_deck.append(parse_anki_export(exported_file))
+  initial_deck.append(parse_anki_export(exported_file, field_names))
   return initial_deck
 
 class Gaggle:
@@ -49,8 +49,8 @@ class Gaggle:
   Parser class for Anki exported files.
   Handles deck construction and organisation.
   """
-  def __init__(self, exported_file=None):
-    self.decks = _initialise_decks(exported_file)
+  def __init__(self, exported_file=None, field_names=None):
+    self.decks = _initialise_decks(exported_file, field_names)
 
   def add_deck(self, deck):
     self.decks.append(deck)
