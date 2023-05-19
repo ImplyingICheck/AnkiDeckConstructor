@@ -126,6 +126,9 @@ class Gaggle:
   def _get_decks(self):
     return self.decks
 
+  def _get_num_decks(self):
+    return len(self.decks)
+
   def print_decks(self):
     for num, deck in enumerate(self.decks, start=1):
       print(f'Deck {num}:')
