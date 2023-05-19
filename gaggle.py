@@ -16,6 +16,8 @@ _ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
+_GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+
 def convert_ankicol_to_gagglecol(ankicol_value):
   try:
     ankicol = int(ankicol_value)
@@ -77,6 +79,22 @@ def _initialise_decks(exported_file, field_names):
   initial_deck.append(parse_anki_export(exported_file, field_names))
   return initial_deck
 
+def _generate_unique_file_path(filename, extension, destination):
+  if not filename:
+    filename = _GENERIC_EXPORT_FILE_NAME
+  file_exists = True
+  tag = 0
+  modified_filename = filename
+  while file_exists:
+    complete_filename = f'{modified_filename}{extension}'
+    file_path = os.path.join(destination, complete_filename)
+    file_exists = os.path.isfile(file_path)
+    if file_exists:
+      modified_filename = f'{filename}{tag}'
+      tag += 1
+  return modified_filename
+
+
 class Gaggle:
   """
   Parser class for Anki exported files.
@@ -94,10 +112,9 @@ class Gaggle:
 
   def write_deck_to_file(self, deck_idx, filename=None, file_type=None,
                          destination='.', extension=''):
-    encoding = 'utf-8'
+    encoding = _ANKI_EXPORT_ENCODING
     mode = 'x'
-    filename = f'{filename}{extension}'
-    file_path = os.path.join(destination, filename)
+    file_path = _generate_unique_file_path(filename, extension, destination)
     if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
       with open(file_path, mode=mode, encoding=encoding, newline='') as f:
         w = csv.writer(f, dialect='excel-tab')
