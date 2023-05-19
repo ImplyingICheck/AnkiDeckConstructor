@@ -111,20 +111,25 @@ class Gaggle:
     deck = parse_anki_export(file)
     self.add_deck(deck)
 
-  def write_deck_to_file(self, deck_idx, filename=None, file_type=None,
+  def write_deck_to_file(self, deck, filename=None, file_type=None,
                          destination='.', extension=''):
+    if isinstance(deck, int):
+      deck = self.get_deck(deck)
     encoding = _ANKI_EXPORT_ENCODING
     mode = 'x'
     file_path = _generate_unique_file_path(filename, extension, destination)
     if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
       with open(file_path, mode=mode, encoding=encoding, newline='') as f:
         w = csv.writer(f, dialect='excel-tab')
-        for card in self.decks[deck_idx]:
+        for card in deck:
           card_strs = card.as_str_list()
           w.writerow(card_strs)
 
   def _get_decks(self):
     return self.decks
+
+  def get_deck(self, idx):
+    return self.decks[idx]
 
   def _get_num_decks(self):
     return len(self.decks)
