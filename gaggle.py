@@ -18,13 +18,14 @@ _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
 _GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
 
-def convert_ankicol_to_gagglecol(ankicol_value):
+def convert_ankicol_to_zero_based_numbering(ankicol_value):
   try:
     ankicol = int(ankicol_value)
-    gagglecol = ankicol - 1
-    return gagglecol
   except ValueError:
     return ankicol_value
+  else:
+    zero_based_idx = ankicol - 1
+    return zero_based_idx
 
 def reformat_header_settings(header):
   reformated_settings = []
@@ -33,7 +34,7 @@ def reformat_header_settings(header):
     if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
       value = header[setting]
       new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
-      new_value = convert_ankicol_to_gagglecol(value)
+      new_value = convert_ankicol_to_zero_based_numbering(value)
       new_settings[new_key] = new_value
       reformated_settings.append(setting)
   for setting in reformated_settings:
