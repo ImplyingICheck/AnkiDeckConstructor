@@ -123,6 +123,9 @@ class Gaggle:
           card_strs = card.as_str_list()
           w.writerow(card_strs)
 
+  def _get_decks(self):
+    return self.decks
+
   def print_decks(self):
     for num, deck in enumerate(self.decks, start=1):
       print(f'Deck {num}:')
