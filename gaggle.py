@@ -1,5 +1,6 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 import csv
+import os.path
 import ankicard
 
 
@@ -12,6 +13,8 @@ _ANKI_EXPORT_HEADER_MAPPING = {
   'notetype column':'note_type_idx', 'deck column':'deck_idx',
   'guid column':'guid_idx'}
 _ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
+_ANKI_NOTESINPLAINTEXT_EXT = '.txt'
+_ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
 def convert_ankicol_to_gagglecol(ankicol_value):
   try:
@@ -88,6 +91,19 @@ class Gaggle:
   def add_deck_from_file(self, file):
     deck = parse_anki_export(file)
     self.add_deck(deck)
+
+  def write_deck_to_file(self, deck_idx, filename=None, file_type=None,
+                         destination='.', extension=''):
+    encoding = 'utf-8'
+    mode = 'x'
+    filename = f'{filename}{extension}'
+    file_path = os.path.join(destination, filename)
+    if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
+      with open(file_path, mode=mode, encoding=encoding, newline='') as f:
+        w = csv.writer(f, dialect='excel-tab')
+        for card in self.decks[deck_idx]:
+          card_strs = card.as_str_list()
+          w.writerow(card_strs)
 
   def print_decks(self):
     for num, deck in enumerate(self.decks, start=1):
