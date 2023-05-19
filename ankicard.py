@@ -83,3 +83,10 @@ class AnkiCard:
   def get_guid(self):
     return self.get_field('GUID')
 
+  def as_str_list(self):
+    str_list = []
+    for name in self.get_field_names():
+      field_value = self.get_field(name)
+      str_list.append(field_value)
+    return str_list
+
