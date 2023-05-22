@@ -3,6 +3,7 @@ import csv
 import os.path
 import ankicard
 import itertools
+import exceptions
 
 from typing import overload
 
@@ -161,6 +162,16 @@ class Gaggle:
         for card in deck:
           card_strs = card.as_str_list()
           w.writerow(card_strs)
+
+  def write_all_decks_to_file(self, **kwargs):
+    flat_kwargs = generate_flattened_kwargs(**kwargs)
+    last_written_deck_idx = None
+    for idx, deck in enumerate(self._get_decks()):
+      print('Deck at idx ', idx, ' written')
+      self.write_deck_to_file(deck, **next(flat_kwargs, {}))
+      last_written_deck_idx = idx
+    if last_written_deck_idx != self._get_num_decks() - 1:
+      raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
   def _get_decks(self):
     return self.decks
