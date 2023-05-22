@@ -147,10 +147,8 @@ class Gaggle:
                          destination='.', extension=''):
     if isinstance(deck, int):
       deck = self.get_deck(deck)
-    if file_type is None:
-      file_type = _ANKI_NOTESINPLAINTEXT_EXT
-    if not destination:
-      destination = '.'
+    file_type = file_type or _ANKI_NOTESINPLAINTEXT_EXT
+    destination = destination or '.'
     if extension is None:
       extension = ''
     encoding = _ANKI_EXPORT_ENCODING
