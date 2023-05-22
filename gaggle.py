@@ -124,7 +124,7 @@ class Gaggle:
 
   @overload
   def write_deck_to_file(self, deck: 'Deck',
-                         filename: str | None= None,
+                         filename: str | None = None,
                          file_type: str | None = None,
                          destination: str = '.',
                          extension: str = '',
@@ -132,7 +132,7 @@ class Gaggle:
     ...
   @overload
   def write_deck_to_file(self, deck: str,
-                         filename: str | None= None,
+                         filename: str | None = None,
                          file_type: str | None = None,
                          destination: str = '.',
                          extension: str = '',
