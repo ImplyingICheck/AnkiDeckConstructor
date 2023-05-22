@@ -2,7 +2,7 @@
 import csv
 import os.path
 import ankicard
-
+import itertools
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
@@ -94,6 +94,15 @@ def _generate_unique_file_path(filename, extension, destination):
       modified_filename = f'{filename}{tag}'
       tag += 1
   return modified_filename
+
+
+def generate_flattened_kwargs(**kwargs):
+  keyword_argument_mappings = map(zip,
+                                  itertools.cycle([kwargs]),
+                                  itertools.zip_longest(*kwargs.values()))
+  for keyword_arguments in list(keyword_argument_mappings):
+    flat_kwargs = dict(keyword_arguments)
+    yield flat_kwargs
 
 
 class Gaggle:
