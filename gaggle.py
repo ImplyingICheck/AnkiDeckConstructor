@@ -130,22 +130,28 @@ class Gaggle:
   def write_deck_to_file(self, deck: 'Deck',
                          filename: str | None = None,
                          file_type: str | None = None,
-                         destination: str = '.',
-                         extension: str = '',
+                         destination: str | None = '.',
+                         extension: str | None = '',
                          ) -> None:
     ...
   @overload
   def write_deck_to_file(self, deck: str,
                          filename: str | None = None,
                          file_type: str | None = None,
-                         destination: str = '.',
-                         extension: str = '',
+                         destination: str | None = '.',
+                         extension: str | None = '',
                          ) -> None:
     ...
   def write_deck_to_file(self, deck, filename=None, file_type=None,
                          destination='.', extension=''):
     if isinstance(deck, int):
       deck = self.get_deck(deck)
+    if file_type is None:
+      file_type = _ANKI_NOTESINPLAINTEXT_EXT
+    if not destination:
+      destination = '.'
+    if extension is None:
+      extension = ''
     encoding = _ANKI_EXPORT_ENCODING
     mode = 'x'
     file_path = _generate_unique_file_path(filename, extension, destination)
