@@ -165,7 +165,6 @@ class Gaggle:
     flat_kwargs = generate_flattened_kwargs(**kwargs)
     last_written_deck_idx = None
     for idx, deck in enumerate(self._get_decks()):
-      print('Deck at idx ', idx, ' written')
       self.write_deck_to_file(deck, **next(flat_kwargs, {}))
       last_written_deck_idx = idx
     if last_written_deck_idx != self._get_num_decks() - 1:
