@@ -4,6 +4,8 @@ import os.path
 import ankicard
 import itertools
 
+from typing import overload
+
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
@@ -120,6 +122,22 @@ class Gaggle:
     deck = parse_anki_export(file)
     self.add_deck(deck)
 
+  @overload
+  def write_deck_to_file(self, deck: 'Deck',
+                         filename: str | None= None,
+                         file_type: str | None = None,
+                         destination: str = '.',
+                         extension: str = '',
+                         ) -> None:
+    ...
+  @overload
+  def write_deck_to_file(self, deck: str,
+                         filename: str | None= None,
+                         file_type: str | None = None,
+                         destination: str = '.',
+                         extension: str = '',
+                         ) -> None:
+    ...
   def write_deck_to_file(self, deck, filename=None, file_type=None,
                          destination='.', extension=''):
     if isinstance(deck, int):
