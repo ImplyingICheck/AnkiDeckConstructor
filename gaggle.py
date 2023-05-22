@@ -87,7 +87,11 @@ def _generate_unique_file_path(filename, extension, destination):
     filename = _GENERIC_EXPORT_FILE_NAME
   file_exists = True
   tag = 0
-  modified_filename = filename
+  if filename == _GENERIC_EXPORT_FILE_NAME:
+    modified_filename = f'{filename}{tag}'
+    tag += 1
+  else:
+    modified_filename = filename
   while file_exists:
     complete_filename = f'{modified_filename}{extension}'
     file_path = os.path.join(destination, complete_filename)
