@@ -226,7 +226,11 @@ class Gaggle:
   def _get_num_decks(self):
     return len(self.decks)
 
-  def print_decks(self):
+  def print_decks(self) -> None:
+    """Outputs each AnkiCard contained in each Deck within the Gaggle to
+    standard output using print() Python builtin.
+
+    """
     for num, deck in enumerate(self.decks, start=1):
       print(f'Deck {num}:')
       for card in deck:
