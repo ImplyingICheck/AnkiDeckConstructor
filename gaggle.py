@@ -5,8 +5,8 @@ import ankicard
 import itertools
 import exceptions
 
-from typing import overload, Any, List
-from collections.abc import Iterable
+from typing import overload, Any, List, Protocol
+from collections.abc import Iterable, Iterator
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
@@ -241,3 +241,7 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+class Falsy(Protocol):
+  def __bool__(self) -> bool:
+    return False
