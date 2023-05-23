@@ -118,8 +118,36 @@ def generate_flattened_kwargs(**kwargs):
     yield flat_kwargs
 
 
-def generate_flattened_kwargs_with_sentinel(sentinel=None,
-                                            **kwargs: Iterable[Any]):
+def generate_flattened_kwargs_with_sentinel(
+        sentinel: Falsy = None,
+        **kwargs: Iterable[Any],
+        ) -> Iterator[dict[str, Iterable[Any]]]:
+  """Generator which yields a dictionary of keywords to arguments. The values
+  have lazy evaluation and falsy values are not returned. For usage with values
+  which evaluate to False, see generate_flattened_kwargs().
+
+  Args:
+    sentinel: Any object that evaluates to False. That is, it implements
+    __bool__ and returns False.
+    **kwargs: An iterable containing arguments
+
+  Yields:
+    Dictionary mapping keyword to arguments. Each dictionary contains the
+    arguments that would be found at the same "index" i as if **kwargs contained
+    lists. For example, having i as 5:
+
+    {'param1_keyword': argument15,
+     'param2_keyword': argument25,
+     'param3_keyword': argument35}
+
+    Returned keys always strings. Unlike the generate_flattened_kwargs()
+    function, this function will remove any argument which evaluates to False.
+    Taking our previous example, let us say argument25 == None. For example:
+
+    {'param1_keyword': argument15,
+     'param3_keyword': argument35}
+
+  """
   arguments = itertools.zip_longest(*kwargs.values(), fillvalue=sentinel)
   arguments, sentinel_filter = itertools.tee(arguments)
   keyword_argument_pairs = map(zip,
