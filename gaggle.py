@@ -217,7 +217,12 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self):
+  def _get_decks(self) -> list['Deck']:
+    """Getter for list containing Deck objects in Gaggle
+
+    Returns:
+      List containing Deck objects store in Gaggle
+    """
     return self.decks
 
   def get_deck(self, idx):
