@@ -143,17 +143,17 @@ class Gaggle:
   @overload
   def write_deck_to_file(self, deck: 'Deck',
                          filename: str | None = None,
-                         file_type: str | None = None,
-                         destination: str | None = '.',
-                         extension: str | None = '',
+                         file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
+                         destination: str = '.',
+                         extension: str = '',
                          ) -> None:
     ...
   @overload
-  def write_deck_to_file(self, deck: str,
+  def write_deck_to_file(self, deck_idx: int,
                          filename: str | None = None,
-                         file_type: str | None = None,
-                         destination: str | None = '.',
-                         extension: str | None = '',
+                         file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
+                         destination: str = '.',
+                         extension: str = '',
                          ) -> None:
     ...
   def write_deck_to_file(self, deck, filename=None, file_type=None,
