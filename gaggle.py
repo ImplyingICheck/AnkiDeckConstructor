@@ -156,14 +156,11 @@ class Gaggle:
                          extension: str = '',
                          ) -> None:
     ...
-  def write_deck_to_file(self, deck, filename=None, file_type=None,
+  def write_deck_to_file(self, deck, filename=None,
+                         file_type=_ANKI_NOTESINPLAINTEXT_EXT,
                          destination='.', extension=''):
     if isinstance(deck, int):
       deck = self.get_deck(deck)
-    file_type = file_type or _ANKI_NOTESINPLAINTEXT_EXT
-    destination = destination or '.'
-    if extension is None:
-      extension = ''
     encoding = _ANKI_EXPORT_ENCODING
     mode = 'x'
     file_path = _generate_unique_file_path(filename, extension, destination)
