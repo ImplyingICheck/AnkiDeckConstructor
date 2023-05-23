@@ -175,7 +175,7 @@ class Gaggle:
           w.writerow(card_strs)
 
   def write_all_decks_to_file(self, **kwargs):
-    flat_kwargs = generate_flattened_kwargs(**kwargs)
+    flat_kwargs = generate_flattened_kwargs_with_sentinel(**kwargs)
     last_written_deck_idx = None
     for idx, deck in enumerate(self._get_decks()):
       self.write_deck_to_file(deck, **next(flat_kwargs, {}))
