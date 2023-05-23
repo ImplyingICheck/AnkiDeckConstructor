@@ -274,7 +274,3 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
-
-class Falsy(Protocol):
-  def __bool__(self) -> bool:
-    return False
