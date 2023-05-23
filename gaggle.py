@@ -113,7 +113,8 @@ def generate_flattened_kwargs(**kwargs):
     yield flat_kwargs
 
 
-def generate_flattened_kwargs_with_sentinel(sentinel=None, **kwargs):
+def generate_flattened_kwargs_with_sentinel(sentinel=None,
+                                            **kwargs: Iterable[Any]):
   arguments = itertools.zip_longest(*kwargs.values(), fillvalue=sentinel)
   arguments, sentinel_filter = itertools.tee(arguments)
   keyword_argument_pairs = map(zip,
@@ -193,7 +194,7 @@ class Gaggle:
           card_strs = card.as_str_list()
           w.writerow(card_strs)
 
-  def write_all_decks_to_file(self, **kwargs: dict[str, Iterable[str]]) -> None:
+  def write_all_decks_to_file(self, **kwargs: Iterable[str | None]) -> None:
     """Writes all Decks stored in Gaggle to file. **kwargs is flattened and
     write_deck_to_file is called with each group of arguments. If there are more
     Decks than argument groups, prints the remaining decks using default values.
