@@ -5,7 +5,7 @@ import ankicard
 import itertools
 import exceptions
 
-from typing import overload
+from typing import overload, Any, List
 from collections.abc import Iterable
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
@@ -218,7 +218,7 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> list['Deck']:
+  def _get_decks(self) -> List['Deck']:
     """Getter for list containing Deck objects in Gaggle
 
     Returns:
