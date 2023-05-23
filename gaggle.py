@@ -22,6 +22,11 @@ _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
 _GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
 
+class Falsy(Protocol):
+  def __bool__(self) -> bool:
+    return False
+
+
 def convert_ankicol_to_zero_based_numbering(ankicol_value):
   try:
     ankicol = int(ankicol_value)
