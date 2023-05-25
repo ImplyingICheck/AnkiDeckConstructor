@@ -37,6 +37,7 @@ def convert_ankicol_to_zero_based_numbering(ankicol_value):
     zero_based_idx = ankicol - 1
     return zero_based_idx
 
+
 def reformat_header_settings(header):
   reformated_settings = []
   new_settings = {}
@@ -52,6 +53,7 @@ def reformat_header_settings(header):
   del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
   header.update(new_settings)
 
+
 def create_cards_from_tsv(f, field_names=None, header=None):
   reformat_header_settings(header)
   cards = csv.reader(f, dialect='excel-tab')
@@ -60,6 +62,7 @@ def create_cards_from_tsv(f, field_names=None, header=None):
     card = ankicard.AnkiCard(card, field_names=field_names, **header)
     deck.append(card)
   return deck
+
 
 def parse_txt_file_header(f):
   header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
@@ -75,6 +78,7 @@ def parse_txt_file_header(f):
   f.seek(reader_pos)
   return header
 
+
 def parse_anki_export(exported_file, field_names=None):
   deck = []
   with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
@@ -83,12 +87,14 @@ def parse_anki_export(exported_file, field_names=None):
       deck = create_cards_from_tsv(f, field_names=field_names, header=header)
   return deck
 
+
 def _initialise_decks(exported_file, field_names):
   initial_deck = []
   if not exported_file:
     return initial_deck
   initial_deck.append(parse_anki_export(exported_file, field_names))
   return initial_deck
+
 
 def _generate_unique_file_path(filename, extension, destination):
   if not filename:
