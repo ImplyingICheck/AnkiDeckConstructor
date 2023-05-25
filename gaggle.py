@@ -122,7 +122,7 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
                                            ) -> Iterator[dict[str, Any]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and falsy values are not returned. For usage with values
-  which evaluate to False, see generate_flattened_kwargs().
+  which evaluate to False, see generate_flattened_kwargs_remove_sentinel().
 
   Args:
     **kwargs: An iterable containing arguments
@@ -132,16 +132,16 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
     arguments that would be found at the same "index" i as if **kwargs contained
     lists. For example, having i as 5:
 
-    {'param1_keyword': argument15,
-     'param2_keyword': argument25,
-     'param3_keyword': argument35}
+    {'param_x_keyword': argument_x5,
+     'param_y_keyword': argument_y5,
+     'param_z_keyword': argument_z5}
 
     Returned keys always strings. Unlike the generate_flattened_kwargs()
     function, this function will remove any argument which evaluates to False.
-    Taking our previous example, let us say argument25 == None. For example:
+    Taking our previous example, let us say argument_y5 == None and
+    argument_x5 == ''. For example:
 
-    {'param1_keyword': argument15,
-     'param3_keyword': argument35}
+    {'param_x_keyword': argument_x5}
 
   """
   arguments = itertools.zip_longest(*kwargs.values())
