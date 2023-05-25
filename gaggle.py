@@ -325,7 +325,8 @@ class Gaggle:
       DecksNotWrittenException: If method fails to write all Decks to file.
 
     """
-    flat_kwargs = generate_flattened_kwargs_remove_falsy(**kwargs)
+    flat_kwargs = generate_flattened_kwargs_remove_sentinel(sentinel='',
+                                                            **kwargs)
     last_written_deck_idx = None
     for idx, deck in enumerate(self._get_decks()):
       self.write_deck_to_file(deck, **next(flat_kwargs, {}))
