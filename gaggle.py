@@ -4,6 +4,7 @@ import os.path
 import ankicard
 import itertools
 import exceptions
+import operator
 
 from typing import overload, Any, List, Protocol
 from collections.abc import Iterable, Iterator
@@ -187,6 +188,59 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
                        falsy_filter)
   for flat_kwargs in filtered_pairs:
     yield dict(flat_kwargs)
+
+
+def generate_flattened_kwargs_remove_sentinel(sentinel: Any = None,
+                                              fillvalue: Any = None,
+                                              **kwargs: Iterable[Any],
+                                              ) -> Iterator[dict[str, Any]]:
+  """Generator which yields a dictionary of keywords to arguments. The values
+  have lazy evaluation and only arguments which match sentinel are removed.
+  Missing arguments are filled with fillvalue.
+
+  To remove missing arguments for which the parameter has been specified,
+  ensure sentinel and fillvalue are equal.
+
+  To remove all falsy arguments, see documentation for
+  generate_flattened_kwargs_remove_falsy(). To only fill missing arguments, see
+  documentation for generate_flattened_kwargs_fill_missing().
+
+  Args:
+    sentinel: Any value for which matching arguments should be removed
+    fillvalue: Any value with which missing arguments are filled
+    **kwargs: An iterable containing arguments
+
+  Yields:
+    Dictionary mapping keyword to arguments. Each dictionary contains the
+    arguments that would be found at the same "index" i as if **kwargs
+    contained lists. For example, having i as 5:
+
+    {'param_x_keyword': argument_x5,
+     'param_y_keyword': argument_y5,
+     'param_z_keyword': argument_z5}
+
+    Returned keys always strings. Unlike the generate_flattened_kwargs()
+    function, this function will remove any argument which matches sentinel.
+    Taking our previous example, let us say argument_x5 == None and
+    "argument_y5" was not passed in but 'param_y_keyword' is a key in the
+    **kwargs passed in. Let sentinel == None and fillvalue == ''. For example,
+
+    {'param_y_keyword': '',
+     'param_z_keyword': argument_z5}
+      """
+  arguments = itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue)
+  arguments, sentinel_filter = itertools.tee(arguments)
+  keyword_argument_pairs = map(zip,
+                               itertools.repeat(kwargs),
+                               arguments)
+  sentinel_filter = map(operator.ne,
+                        itertools.chain.from_iterable(sentinel_filter),
+                        itertools.repeat(sentinel))
+  filtered_keyword_argument_pairs = map(itertools.compress,
+                                        keyword_argument_pairs,
+                                        itertools.repeat(sentinel_filter))
+  for flat_kwargs in filtered_keyword_argument_pairs:
+    yield flat_kwargs
 
 
 class Gaggle:
