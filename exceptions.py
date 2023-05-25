@@ -1,4 +1,4 @@
-"""Definition of project-wide exceptions"""
+"""Definition of Gaggle exceptions. For internal use."""
 
 class DecksNotWrittenException(Exception):
   """Gaggle exception for failure to write all stored Decks to file. Can return
