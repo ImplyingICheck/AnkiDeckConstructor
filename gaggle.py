@@ -154,9 +154,9 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and falsy values are not returned.
 
-    For usage with arguments which evaluate to False, see documentation for
-    generate_flattened_kwargs_remove_sentinel(). To fill missing arguments, see
-    documentation for generate_flattened_kwargs_fill_missing().
+  To remove all falsy arguments, see documentation for
+  generate_flattened_kwargs_remove_falsy(). To fill missing arguments, see
+  documentation for generate_flattened_kwargs_fill_missing().
 
   Args:
     **kwargs: An iterable containing arguments
@@ -170,12 +170,11 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
      'param_y_keyword': argument_y5,
      'param_z_keyword': argument_z5}
 
-    Returned keys always strings. Unlike the generate_flattened_kwargs()
-    function, this function will remove any argument which evaluates to False.
-    Taking our previous example, let us say argument_y5 == None and
-    argument_x5 == ''. For example:
+    Returned keys always strings. This function will remove any argument which
+    evaluates to False. Taking our previous example, let us say
+    argument_y5 == None and argument_x5 == ''. For example:
 
-    {'param_x_keyword': argument_x5}
+    {'param_z_keyword': argument_z5}
 
   """
   arguments = itertools.zip_longest(*kwargs.values())
