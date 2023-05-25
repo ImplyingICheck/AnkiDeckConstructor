@@ -1,13 +1,13 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 import csv
 import os.path
-import ankicard
 import itertools
-import exceptions
 import operator
-
 from typing import overload, Any, List, Protocol
 from collections.abc import Iterable, Iterator
+
+import exceptions
+import ankicard
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
