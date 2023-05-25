@@ -118,10 +118,8 @@ def generate_flattened_kwargs(**kwargs):
     yield flat_kwargs
 
 
-def generate_flattened_kwargs_with_sentinel(
-        sentinel: Falsy = None,
-        **kwargs: Iterable[Any],
-        ) -> Iterator[dict[str, Iterable[Any]]]:
+def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
+                                           ) -> Iterator[dict[str, Any]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and falsy values are not returned. For usage with values
   which evaluate to False, see generate_flattened_kwargs().
