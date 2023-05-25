@@ -176,7 +176,6 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
     argument_y5 == None and argument_x5 == ''. For example:
 
     {'param_z_keyword': argument_z5}
-
   """
   arguments = itertools.zip_longest(*kwargs.values())
   arguments, falsy_filter = itertools.tee(arguments)
@@ -296,7 +295,6 @@ class Gaggle:
       details (https://docs.python.org/3/library/functions.html#open)
       FileExistsError: _generate_unique_file_path() will generate unique
       filenames if a file already exists in a given path. Will not raise.
-
     """
     if isinstance(deck, int):
       deck = self.get_deck(deck)
@@ -323,7 +321,6 @@ class Gaggle:
 
     Raises:
       DecksNotWrittenException: If method fails to write all Decks to file.
-
     """
     flat_kwargs = generate_flattened_kwargs_remove_sentinel(sentinel='',
                                                             **kwargs)
@@ -351,7 +348,6 @@ class Gaggle:
   def print_decks(self) -> None:
     """Outputs each AnkiCard contained in each Deck within the Gaggle to
     standard output using print() Python builtin.
-
     """
     for num, deck in enumerate(self.decks, start=1):
       print(f'Deck {num}:')
