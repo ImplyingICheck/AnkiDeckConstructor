@@ -144,16 +144,16 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
      'param3_keyword': argument35}
 
   """
-  arguments = itertools.zip_longest(*kwargs.values(), fillvalue=sentinel)
-  arguments, sentinel_filter = itertools.tee(arguments)
+  arguments = itertools.zip_longest(*kwargs.values())
+  arguments, falsy_filter = itertools.tee(arguments)
   keyword_argument_pairs = map(zip,
                                itertools.cycle([kwargs]),
                                arguments)
   filtered_pairs = map(itertools.compress,
                        keyword_argument_pairs,
-                       sentinel_filter)
-  for keyword_arguments in filtered_pairs:
-    yield dict(keyword_arguments)
+                       falsy_filter)
+  for flat_kwargs in filtered_pairs:
+    yield dict(flat_kwargs)
 
 
 class Gaggle:
