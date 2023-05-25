@@ -125,8 +125,6 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   which evaluate to False, see generate_flattened_kwargs().
 
   Args:
-    sentinel: Any object that evaluates to False. That is, it implements
-    __bool__ and returns False.
     **kwargs: An iterable containing arguments
 
   Yields:
