@@ -114,9 +114,8 @@ def generate_flattened_kwargs_fill_missing(fillvalue=None, **kwargs):
                                   itertools.repeat(kwargs),
                                   itertools.zip_longest(*kwargs.values(),
                                                         fillvalue=fillvalue))
-  for keyword_arguments in list(keyword_argument_mappings):
-    flat_kwargs = dict(keyword_arguments)
-    yield flat_kwargs
+  for keyword_arguments in keyword_argument_mappings:
+    yield dict(keyword_arguments)
 
 
 def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
