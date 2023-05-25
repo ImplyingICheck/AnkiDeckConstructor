@@ -147,7 +147,7 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   arguments = itertools.zip_longest(*kwargs.values())
   arguments, falsy_filter = itertools.tee(arguments)
   keyword_argument_pairs = map(zip,
-                               itertools.cycle([kwargs]),
+                               itertools.repeat(kwargs),
                                arguments)
   filtered_pairs = map(itertools.compress,
                        keyword_argument_pairs,
