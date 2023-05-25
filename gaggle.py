@@ -109,7 +109,38 @@ def _generate_unique_file_path(filename, extension, destination):
   return modified_filename
 
 
-def generate_flattened_kwargs_fill_missing(fillvalue=None, **kwargs):
+def generate_flattened_kwargs_fill_missing(fillvalue: Any = None,
+                                           **kwargs: Iterator[Any],
+                                           ) -> Iterator[dict[str, Any]]:
+  """Generator which yields a dictionary of keywords to arguments. The values
+  have lazy evaluation and missing arguments are filled with fillvalue.
+
+    For usage with arguments which evaluate to False, see documentation for
+    generate_flattened_kwargs_remove_sentinel(). To remove all falsy arguments,
+    see documentation for generate_flattened_kwargs_remove_falsy().
+
+    Args:
+      fillvalue: Any value with which missing arguments are filled
+      **kwargs: An iterable containing arguments
+
+    Yields:
+      Dictionary mapping keyword to arguments. Each dictionary contains the
+      arguments that would be found at the same "index" i as if **kwargs
+      contained lists. For example, having i as 5:
+
+      {'param_x_keyword': argument_x5,
+       'param_y_keyword': argument_y5,
+       'param_z_keyword': argument_z5}
+
+      Returned keys always strings. This function will fill missing arguments
+      with the specified fillvalue. Taking our previous example, let us say
+      "argument_y5" was not passed in but "param_y_keyword" is a key in the
+      **kwargs passed in. We have the fillvalue object(). For example:
+
+      {'param_x_keyword': argument_x5,
+       'param_y_keyword': object(),
+       'param_z_keyword': argument_z5}
+    """
   keyword_argument_mappings = map(zip,
                                   itertools.repeat(kwargs),
                                   itertools.zip_longest(*kwargs.values(),
