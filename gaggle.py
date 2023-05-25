@@ -109,10 +109,11 @@ def _generate_unique_file_path(filename, extension, destination):
   return modified_filename
 
 
-def generate_flattened_kwargs(**kwargs):
+def generate_flattened_kwargs_fill_missing(fillvalue=None, **kwargs):
   keyword_argument_mappings = map(zip,
-                                  itertools.cycle([kwargs]),
-                                  itertools.zip_longest(*kwargs.values()))
+                                  itertools.repeat(kwargs),
+                                  itertools.zip_longest(*kwargs.values(),
+                                                        fillvalue=fillvalue))
   for keyword_arguments in list(keyword_argument_mappings):
     flat_kwargs = dict(keyword_arguments)
     yield flat_kwargs
