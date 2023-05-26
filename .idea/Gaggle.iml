@@ -8,6 +8,7 @@
       <excludePattern pattern=".gitignore" />
       <excludePattern pattern="pylintrc" />
     </content>
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
