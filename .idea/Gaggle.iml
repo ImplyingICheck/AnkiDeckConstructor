@@ -7,6 +7,9 @@
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludePattern pattern=".gitignore" />
       <excludePattern pattern=".pylintrc" />
+      <excludePattern pattern="poetry.lock" />
+      <excludePattern pattern="pyproject.toml" />
+      <excludePattern pattern="README.md" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
