@@ -39,7 +39,7 @@ def convert_ankicol_to_zero_based_numbering(ankicol_value):
 
 
 def reformat_header_settings(header):
-  reformated_settings = []
+  reformatted_settings = []
   new_settings = {}
   for setting in header.keys():
     if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
@@ -47,8 +47,8 @@ def reformat_header_settings(header):
       new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
       new_value = convert_ankicol_to_zero_based_numbering(value)
       new_settings[new_key] = new_value
-      reformated_settings.append(setting)
-  for setting in reformated_settings:
+      reformatted_settings.append(setting)
+  for setting in reformatted_settings:
     del header[setting]
   del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
   header.update(new_settings)
