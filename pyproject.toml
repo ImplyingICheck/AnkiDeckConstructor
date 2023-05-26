@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "gaggle"
+version = "0.1.0"
+description = "A program to parse exported files from Anki, make edits, and export those edits as new files."
+authors = ["ImplyingICheck <implyingicheck@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.17.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
