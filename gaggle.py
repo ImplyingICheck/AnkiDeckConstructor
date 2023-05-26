@@ -79,7 +79,8 @@ def parse_txt_file_header(f):
   return header
 
 
-def parse_anki_export(exported_file, field_names=None):
+def _parse_anki_export(exported_file, field_names=None):
+  header = None
   deck = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_txt_file_header(f)
@@ -92,7 +93,7 @@ def _initialise_decks(exported_file, field_names):
   initial_deck = []
   if not exported_file:
     return initial_deck
-  initial_deck.append(parse_anki_export(exported_file, field_names))
+  initial_deck.append(_parse_anki_export(exported_file, field_names))
   return initial_deck
 
 
@@ -370,7 +371,8 @@ class AnkiDeck:
     self.cards = cards
 
   @classmethod
-  def from_file(cls):
+  def from_file(cls, file):
+    _parse_anki_export(file)
     pass
 
   def write_deck(self):
