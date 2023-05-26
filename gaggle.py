@@ -369,7 +369,6 @@ def parse_header_settings(f):
 
 
 def _parse_anki_export(exported_file, field_names=None):
-  header = None
   deck = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_header_settings(f)
