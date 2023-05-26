@@ -64,31 +64,6 @@ def create_cards_from_tsv(f, field_names=None, header=None):
   return deck
 
 
-def parse_txt_file_header(f):
-  header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
-  header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
-  header = {}
-  reader_pos = f.tell()
-  while f.read(1) == header_symbol:
-    line = f.readline()
-    setting, value = line.split(header_separator)
-    value = value.rstrip()
-    header[setting] = value
-    reader_pos = f.tell()
-  f.seek(reader_pos)
-  return header
-
-
-def _parse_anki_export(exported_file, field_names=None):
-  header = None
-  deck = []
-  with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
-    header = parse_txt_file_header(f)
-    if header['separator'] == 'tab':
-      deck = create_cards_from_tsv(f, field_names=field_names, header=header)
-  return header, deck
-
-
 def _initialise_decks(exported_file, field_names):
   initial_deck = []
   if not exported_file:
@@ -368,6 +343,31 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+
+def parse_txt_file_header(f):
+  header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
+  header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
+  header = {}
+  reader_pos = f.tell()
+  while f.read(1) == header_symbol:
+    line = f.readline()
+    setting, value = line.split(header_separator)
+    value = value.rstrip()
+    header[setting] = value
+    reader_pos = f.tell()
+  f.seek(reader_pos)
+  return header
+
+
+def _parse_anki_export(exported_file, field_names=None):
+  header = None
+  deck = []
+  with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
+    header = parse_txt_file_header(f)
+    if header['separator'] == 'tab':
+      deck = create_cards_from_tsv(f, field_names=field_names, header=header)
+  return header, deck
 
 
 class AnkiDeck:
