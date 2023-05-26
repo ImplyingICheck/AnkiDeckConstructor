@@ -4,6 +4,9 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.github" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludePattern pattern=".gitignore" />
+      <excludePattern pattern="pylintrc" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
