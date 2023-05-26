@@ -86,7 +86,7 @@ def _parse_anki_export(exported_file, field_names=None):
     header = parse_txt_file_header(f)
     if header['separator'] == 'tab':
       deck = create_cards_from_tsv(f, field_names=field_names, header=header)
-  return deck
+  return header, deck
 
 
 def _initialise_decks(exported_file, field_names):
