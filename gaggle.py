@@ -51,12 +51,10 @@ def create_cards_from_tsv(f, field_names=None, header=None):
 
 
 def _initialise_decks(exported_file, field_names):
-  initial_deck = []
-  if not exported_file:
-    return initial_deck
-  # TODO: change this to use AnkiDeck.from_file construction
-  initial_deck.append(_parse_anki_export(exported_file, field_names))
-  return initial_deck
+  if exported_file:
+    return [AnkiDeck.from_file(exported_file, field_names)]
+  else:
+    return []
 
 
 def _generate_unique_file_path(filename, extension, destination):
