@@ -1,4 +1,6 @@
 """Base class for collection, a class representing multiple Anki Decks."""
+from __future__ import annotations
+
 import csv
 import os.path
 import itertools
@@ -234,7 +236,7 @@ class Gaggle:
     self.add_deck(deck)
 
   @overload
-  def write_deck_to_file(self, deck: 'Deck',
+  def write_deck_to_file(self, deck: AnkiDeck,
                          filename: str | None = None,
                          file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
                          destination: str = '.',
@@ -307,7 +309,7 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> List['Deck']:
+  def _get_decks(self) -> List[AnkiDeck]:
     """Getter for list containing Deck objects in Gaggle
 
     Returns:
