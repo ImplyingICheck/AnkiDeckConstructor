@@ -55,7 +55,6 @@ def reformat_header_settings(header):
 
 
 def create_cards_from_tsv(f, field_names=None, header=None):
-  reformat_header_settings(header)
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
@@ -365,6 +364,7 @@ def _parse_anki_export(exported_file, field_names=None):
   deck = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_txt_file_header(f)
+    reformat_header_settings(header)
     if header['separator'] == 'tab':
       deck = create_cards_from_tsv(f, field_names=field_names, header=header)
   return header, deck
