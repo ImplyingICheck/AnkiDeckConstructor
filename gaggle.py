@@ -387,17 +387,20 @@ class AnkiDeck:
     self.cards = cards
 
   @classmethod
-  def from_file(cls, file) -> Self:
+  def from_file(cls, file, field_names=None) -> Self:
     """Factory method to create an AnkiDeck directly from a file.
 
     Args:
       file: A string representing the file path of the information used to
       construct the deck.
+      field_names: Strings representing the name of each field in each card. See
+      documentation for _generate_field_names() for details on usage and
+      structure.
 
     Returns:
       A gaggle.AnkiDeck object
     """
-    header, cards = _parse_anki_export(file)
+    header, cards = _parse_anki_export(file, field_names)
     return cls(header, cards)
 
   def write_deck(self):
