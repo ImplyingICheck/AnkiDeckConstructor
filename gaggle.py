@@ -343,7 +343,6 @@ def reformat_header_settings(header):
       reformatted_settings.append(setting)
   for setting in reformatted_settings:
     del header[setting]
-  del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
   header.update(new_settings)
 
 
