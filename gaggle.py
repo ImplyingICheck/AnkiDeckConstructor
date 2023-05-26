@@ -260,8 +260,16 @@ class Gaggle:
   def add_deck(self, deck):
     self.decks.append(deck)
 
-  def add_deck_from_file(self, file):
-    deck = parse_anki_export(file)
+  def add_deck_from_file(self, file: str) -> None:
+    """
+
+    Args:
+      file:
+
+    Returns:
+
+    """
+    deck = _parse_anki_export(file)
     self.add_deck(deck)
 
   @overload
