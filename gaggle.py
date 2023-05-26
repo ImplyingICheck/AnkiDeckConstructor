@@ -359,3 +359,19 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+class AnkiDeck:
+  """Represents a collection of Notes and Cards exported from Anki
+  (i.e. gaggle.AnkiCards)."""
+  def __init__(self,
+               header: dict[str, str | int],
+               cards: Iterable[ankicard.AnkiCard] | None = None):
+    self.header = header
+    self.cards = cards
+
+  @classmethod
+  def from_file(cls):
+    pass
+
+  def write_deck(self):
+    pass
