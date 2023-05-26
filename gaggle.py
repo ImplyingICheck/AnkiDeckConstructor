@@ -347,7 +347,7 @@ def reformat_header_settings(header):
   header.update(new_settings)
 
 
-def parse_txt_file_header(f):
+def read_header_settings(f):
   header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
   header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
   header = {}
@@ -366,7 +366,7 @@ def _parse_anki_export(exported_file, field_names=None):
   header = None
   deck = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
-    header = parse_txt_file_header(f)
+    header = read_header_settings(f)
     reformat_header_settings(header)
     if header['separator'] == 'tab':
       deck = create_cards_from_tsv(f, field_names=field_names, header=header)
