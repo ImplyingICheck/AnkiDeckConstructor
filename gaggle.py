@@ -15,6 +15,7 @@ _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR = 'separator'
+_ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
 _ANKI_EXPORT_HEADER_MAPPING = {
   'html':'has_html', 'tags column':'tags_idx',
   'notetype column':'note_type_idx', 'deck column':'deck_idx',
@@ -368,6 +369,8 @@ def parse_header_settings(f):
 
 
 def _parse_anki_export(exported_file, field_names=None):
+  seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR
+  tsv = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING
   cards = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_header_settings(f)
