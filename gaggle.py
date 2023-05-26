@@ -369,6 +369,7 @@ class Gaggle:
       for card in deck:
         print(card)
 
+
 class AnkiDeck:
   """Represents a collection of Notes and Cards exported from Anki
   (i.e. gaggle.AnkiCards)."""
