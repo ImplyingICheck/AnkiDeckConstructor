@@ -3,7 +3,7 @@ import csv
 import os.path
 import itertools
 import operator
-from typing import overload, Any, List, Protocol
+from typing import overload, Any, List, Protocol, Self
 from collections.abc import Iterable, Iterator
 
 import exceptions
@@ -387,9 +387,18 @@ class AnkiDeck:
     self.cards = cards
 
   @classmethod
-  def from_file(cls, file):
-    _parse_anki_export(file)
-    pass
+  def from_file(cls, file) -> Self:
+    """Factory method to create an AnkiDeck directly from a file.
+
+    Args:
+      file: A string representing the file path of the information used to
+      construct the deck.
+
+    Returns:
+      A gaggle.AnkiDeck object
+    """
+    header, cards = _parse_anki_export(file)
+    return cls(header, cards)
 
   def write_deck(self):
     pass
