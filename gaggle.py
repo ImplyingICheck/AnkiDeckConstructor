@@ -229,8 +229,7 @@ class Gaggle:
     Returns:
 
     """
-    # TODO: Switch to AnkiDeck.from_file construction
-    deck = _parse_anki_export(file)
+    deck = AnkiDeck.from_file(file)
     self.add_deck(deck)
 
   @overload
