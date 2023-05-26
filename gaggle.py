@@ -362,6 +362,12 @@ def read_header_settings(f):
   return header
 
 
+def parse_header_settings(f):
+  header = read_header_settings(f)
+  reformat_header_settings(header)
+  return header
+
+
 def _parse_anki_export(exported_file, field_names=None):
   header = None
   deck = []
