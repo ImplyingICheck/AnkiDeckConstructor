@@ -38,22 +38,6 @@ def convert_ankicol_to_zero_based_numbering(ankicol_value):
     return zero_based_idx
 
 
-def reformat_header_settings(header):
-  reformatted_settings = []
-  new_settings = {}
-  for setting in header.keys():
-    if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
-      value = header[setting]
-      new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
-      new_value = convert_ankicol_to_zero_based_numbering(value)
-      new_settings[new_key] = new_value
-      reformatted_settings.append(setting)
-  for setting in reformatted_settings:
-    del header[setting]
-  del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
-  header.update(new_settings)
-
-
 def create_cards_from_tsv(f, field_names=None, header=None):
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
@@ -342,6 +326,22 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+
+def reformat_header_settings(header):
+  reformatted_settings = []
+  new_settings = {}
+  for setting in header.keys():
+    if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
+      value = header[setting]
+      new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
+      new_value = convert_ankicol_to_zero_based_numbering(value)
+      new_settings[new_key] = new_value
+      reformatted_settings.append(setting)
+  for setting in reformatted_settings:
+    del header[setting]
+  del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
+  header.update(new_settings)
 
 
 def parse_txt_file_header(f):
