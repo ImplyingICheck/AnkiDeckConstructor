@@ -207,7 +207,7 @@ def generate_flattened_kwargs_remove_sentinel(sentinel: Any = None,
                                         keyword_argument_pairs,
                                         itertools.repeat(sentinel_filter))
   for flat_kwargs in filtered_keyword_argument_pairs:
-    yield flat_kwargs
+    yield dict(flat_kwargs)
 
 
 class Gaggle:
