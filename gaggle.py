@@ -38,6 +38,7 @@ def convert_ankicol_to_zero_based_numbering(ankicol_value):
     return zero_based_idx
 
 
+# TODO: Move to class declaration of AnkiCard after refactor
 def create_cards_from_tsv(f, field_names=None, header=None):
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
@@ -51,6 +52,7 @@ def _initialise_decks(exported_file, field_names):
   initial_deck = []
   if not exported_file:
     return initial_deck
+  # TODO: change this to use AnkiDeck.from_file construction
   initial_deck.append(_parse_anki_export(exported_file, field_names))
   return initial_deck
 
@@ -227,6 +229,7 @@ class Gaggle:
     Returns:
 
     """
+    # TODO: Switch to AnkiDeck.from_file construction
     deck = _parse_anki_export(file)
     self.add_deck(deck)
 
