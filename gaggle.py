@@ -52,6 +52,17 @@ def create_cards_from_tsv(f, field_names=None, header=None):
 
 
 def _initialise_decks(exported_file, field_names):
+  """
+
+  Args:
+    exported_file:
+    field_names:
+
+  Returns:
+
+  Raises:
+    FileNotFoundError: If file specified by exported_file does not exist
+  """
   if exported_file:
     return [AnkiDeck.from_file(exported_file, field_names)]
   else:
@@ -216,6 +227,15 @@ class Gaggle:
   Handles deck construction and organisation.
   """
   def __init__(self, exported_file=None, field_names=None):
+    """
+
+    Args:
+      exported_file:
+      field_names:
+
+    Raises:
+      FileNotFoundError: If file specified by exported_file does not exist
+    """
     self.decks = _initialise_decks(exported_file, field_names)
 
   def add_deck(self, deck):
@@ -369,6 +389,17 @@ def parse_header_settings(f):
 
 
 def _parse_anki_export(exported_file, field_names=None):
+  """
+
+  Args:
+    exported_file:
+    field_names:
+
+  Returns:
+
+  Raises:
+    FileNotFoundError: If file specified by exported_file does not exist
+  """
   seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR
   tsv = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING
   cards = []
@@ -403,6 +434,9 @@ class AnkiDeck:
 
     Returns:
       A gaggle.AnkiDeck object
+
+    Raises:
+      FileNotFoundError: If file specified by file does not exist
     """
     header, cards = _parse_anki_export(file, field_names)
     return cls(header, cards)
