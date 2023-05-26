@@ -403,5 +403,8 @@ class AnkiDeck:
     header, cards = _parse_anki_export(file, field_names)
     return cls(header, cards)
 
+  def get_cards(self):
+    return self.cards
+
   def write_deck(self):
     pass
