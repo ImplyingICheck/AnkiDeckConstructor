@@ -291,6 +291,7 @@ class Gaggle:
       details (https://docs.python.org/3/library/functions.html#open)
       FileExistsError: _generate_unique_file_path() will generate unique
       filenames if a file already exists in a given path. Will not raise.
+      ValueError: If argument passed for file_type is not a supported file type
     """
     if isinstance(deck, int):
       deck = self.get_deck(deck)
@@ -303,6 +304,9 @@ class Gaggle:
         for card in deck:
           card_strs = card.as_str_list()
           w.writerow(card_strs)
+    else:
+      raise ValueError('Failed to write Deck to file. Expected a valid '
+                       f'file_type but instead got {file_type}')
 
   def write_all_decks_to_file(self, **kwargs: Iterable[str | None]) -> None:
     """Writes all Decks stored in Gaggle to file. **kwargs is flattened and
@@ -317,6 +321,7 @@ class Gaggle:
 
     Raises:
       DecksNotWrittenException: If method fails to write all Decks to file.
+      ValueError: See documentation for write_deck_to_file() for details
     """
     flat_kwargs = generate_flattened_kwargs_remove_sentinel(sentinel='',
                                                             **kwargs)
