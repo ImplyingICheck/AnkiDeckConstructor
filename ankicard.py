@@ -59,7 +59,7 @@ class AnkiCard:
 
   def _overlay_anki_header_names(self, anki_header_names):
     for name, field_idx in anki_header_names.items():
-      if field_idx:
+      if field_idx is not None:
         self.field_names[field_idx] = name
 
   def get_field(self, field_name):
