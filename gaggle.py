@@ -238,6 +238,9 @@ class Gaggle:
     """
     self.decks = _initialise_decks(exported_file, field_names)
 
+  def __iter__(self):
+    return iter(self._get_decks())
+
   def add_deck(self, deck):
     self.decks.append(deck)
 
