@@ -449,7 +449,12 @@ class AnkiDeck:
   def __iter__(self):
     return iter(self.cards)
 
-  def get_cards(self):
+  def get_cards(self) -> Iterable[ankicard.AnkiCard]:
+    """Getter method for AnkiDeck.cards
+
+    Returns:
+      Iterable of AnkiCards
+    """
     return self.cards
 
   def write_deck(self):
