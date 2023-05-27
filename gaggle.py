@@ -422,7 +422,7 @@ class AnkiDeck:
   (i.e. gaggle.AnkiCards)."""
   def __init__(self,
                header: dict[str, str | int],
-               cards: Iterable[ankicard.AnkiCard] | None = None):
+               cards: Iterable[ankicard.AnkiCard]):
     self.header = header
     self.cards = cards
 
