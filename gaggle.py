@@ -353,7 +353,6 @@ class Gaggle:
     """
     for num, deck in enumerate(self.decks, start=1):
       print(f'Deck {num}:')
-      # TODO: Update deck usage to reflect AnkiDeck
       for card in deck:
         print(card)
 
