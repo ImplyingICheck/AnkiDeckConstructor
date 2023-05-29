@@ -26,8 +26,6 @@ _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
 _GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
 
-T = TypeVar('T')
-
 class HasIndex(Protocol):
   def __index__(self) -> int:
     ...
@@ -43,6 +41,8 @@ class HasTruncate(Protocol):
 class Falsy(Protocol):
   def __bool__(self) -> bool:
     return False
+
+T = TypeVar('T')
 
 
 def convert_ankicol_to_zero_based_numbering(ankicol_value):
