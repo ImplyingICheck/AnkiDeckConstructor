@@ -5,7 +5,7 @@ import csv
 import os.path
 import itertools
 import operator
-from typing import overload, Any, List, Protocol, Self
+from typing import overload, Any, List, Protocol, Self, TypeVar
 from collections.abc import Iterable, Iterator
 
 import exceptions
@@ -25,6 +25,8 @@ _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
 _GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+
+T = TypeVar('T')
 
 class Falsy(Protocol):
   def __bool__(self) -> bool:
