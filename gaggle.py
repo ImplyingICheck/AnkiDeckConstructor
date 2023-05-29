@@ -67,6 +67,35 @@ def convert_ankicol_to_zero_based_numbering(ankicol_value):
     return zero_based_idx
 
 
+@overload
+def transform_integer_value(value: T,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> T:
+  ...
+@overload
+def transform_integer_value(value: HasIndex,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> HasIndex | int:
+  ...
+@overload
+def transform_integer_value(value: RealNumber,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> int:
+  ...
+def transform_integer_value(value, translation=0, scale=1):
+  try:
+    transformed_value = int(value)
+  except ValueError:
+    return value
+  else:
+    transformed_value += translation
+    transformed_value *= scale
+    return transformed_value
+
+
 # TODO: Move to class declaration of AnkiCard after refactor
 def create_cards_from_tsv(f, field_names=None, header=None):
   cards = csv.reader(f, dialect='excel-tab')
