@@ -454,13 +454,13 @@ def _parse_anki_export(exported_file, field_names=None):
   Raises:
     FileNotFoundError: If file specified by exported_file does not exist
   """
-  seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR
+  seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME
   tsv = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING
   cards = []
   with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
     header = parse_header_settings(f)
     if header[seperator_setting_key] == tsv:
-      del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
+      del header[seperator_setting_key]
       cards = create_cards_from_tsv(f, field_names=field_names, header=header)
       header[seperator_setting_key] = tsv
   return header, cards
