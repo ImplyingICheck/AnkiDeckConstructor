@@ -1,6 +1,7 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 from __future__ import annotations
 
+import copy
 import csv
 import os.path
 import itertools
@@ -409,19 +410,36 @@ class Gaggle:
         print(card)
 
 
-def reformat_header_settings(header):
-  reformatted_settings = []
-  new_settings = {}
-  for setting in header.keys():
+def copy_and_reformat(original: dict, direction: 'ReformatDirection'):
+  deep_copy = copy.deepcopy(original)
+  reformat_header_settings(deep_copy, direction)
+  return deep_copy
+
+
+def reformat_header_settings(header: dict, direction: 'ReformatDirection'):
+  """
+
+  Args:
+    header:
+    direction:
+
+  Returns:
+
+  Raises:
+    KeyError: If argument passed for direction is not a supported conversion
+  """
+  # TODO: make a custom exception, can shadow header[setting] KeyError
+  translation = _DIRECTION_TRANSLATION_VALUE[direction]
+  reformat_mapping = _DIRECTION_MAPPING[direction]
+  reformatted_header = {}
+  for setting, value in header.items():
     value = header[setting]
-    new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
+    new_key = reformat_mapping[setting]
     new_value = transform_integer_value(value,
                                         translation=translation)
-    new_settings[new_key] = new_value
-    reformatted_settings.append(setting)
-  for setting in reformatted_settings:
-    del header[setting]
-  header.update(new_settings)
+    reformatted_header[new_key] = new_value
+  header.clear()
+  header.update(reformatted_header)
 
 
 def read_header_settings(f):
@@ -441,7 +459,7 @@ def read_header_settings(f):
 
 def parse_header_settings(f):
   header = read_header_settings(f)
-  reformat_header_settings(header)
+  reformat_header_settings(header, direction=ANKI_TO_GAGGLE)
   return header
 
 
