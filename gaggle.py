@@ -57,16 +57,6 @@ T = TypeVar('T')
 RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
 
 
-def convert_ankicol_to_zero_based_numbering(ankicol_value):
-  try:
-    ankicol = int(ankicol_value)
-  except ValueError:
-    return ankicol_value
-  else:
-    zero_based_idx = ankicol - 1
-    return zero_based_idx
-
-
 @overload
 def transform_integer_value(value: T,
                             translation: int = 0,
@@ -422,7 +412,8 @@ def reformat_header_settings(header):
     if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
       value = header[setting]
       new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
-      new_value = convert_ankicol_to_zero_based_numbering(value)
+      new_value = transform_integer_value(value,
+                                          translation=translation)
       new_settings[new_key] = new_value
       reformatted_settings.append(setting)
   for setting in reformatted_settings:
