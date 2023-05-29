@@ -29,7 +29,7 @@ _GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
 T = TypeVar('T')
 
 class HasIndex(Protocol):
-  def __index__(self):
+  def __index__(self) -> int:
     ...
 
 class HasInt(Protocol):
