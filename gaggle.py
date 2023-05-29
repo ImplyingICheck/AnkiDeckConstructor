@@ -43,6 +43,7 @@ class Falsy(Protocol):
     return False
 
 T = TypeVar('T')
+RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
 
 
 def convert_ankicol_to_zero_based_numbering(ankicol_value):
