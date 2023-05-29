@@ -27,7 +27,6 @@ _ANKI_EXPORT_HEADER_MAPPING = {
 _ANKI_EXPORT_HEADER_MAPPING_REVERSE = {
   v: k for k, v in _ANKI_EXPORT_HEADER_MAPPING.items()
 }
-_ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
 _ANKI_ORDERED_HEADER = [
   'separator', 'html', 'guid column', 'notetype column', 'deck column',
   'tags column'
@@ -409,13 +408,12 @@ def reformat_header_settings(header):
   reformatted_settings = []
   new_settings = {}
   for setting in header.keys():
-    if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
-      value = header[setting]
-      new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
-      new_value = transform_integer_value(value,
-                                          translation=translation)
-      new_settings[new_key] = new_value
-      reformatted_settings.append(setting)
+    value = header[setting]
+    new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
+    new_value = transform_integer_value(value,
+                                        translation=translation)
+    new_settings[new_key] = new_value
+    reformatted_settings.append(setting)
   for setting in reformatted_settings:
     del header[setting]
   header.update(new_settings)
