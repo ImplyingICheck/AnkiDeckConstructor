@@ -460,5 +460,5 @@ class AnkiDeck:
     """
     return self.cards
 
-  def write_deck(self):
-    pass
+  def get_header(self):
+    return self.header
