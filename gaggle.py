@@ -36,6 +36,10 @@ class HasInt(Protocol):
   def __int__(self) -> int:
     ...
 
+class HasTruncate(Protocol):
+  def __trunc__(self) -> int:
+    ...
+
 class Falsy(Protocol):
   def __bool__(self) -> bool:
     return False
