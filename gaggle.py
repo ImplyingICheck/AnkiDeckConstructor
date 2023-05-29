@@ -462,3 +462,7 @@ class AnkiDeck:
 
   def get_header(self):
     return self.header
+
+  def get_header_setting(self, setting: str, default: Any = None):
+    header = self.get_header()
+    return header.get(setting, default)
