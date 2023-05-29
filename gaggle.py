@@ -28,6 +28,10 @@ _ANKI_EXPORT_HEADER_MAPPING_REVERSE = {
   v: k for k, v in _ANKI_EXPORT_HEADER_MAPPING.items()
 }
 _ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
+_ANKI_ORDERED_HEADER = [
+  'separator', 'html', 'guid column', 'notetype column', 'deck column',
+  'tags column'
+]
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
