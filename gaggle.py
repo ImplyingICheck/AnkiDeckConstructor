@@ -17,9 +17,13 @@ _ANKI_EXPORT_ENCODING = 'utf-8'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME = 'separator'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
 _ANKI_EXPORT_HEADER_MAPPING = {
-  'html':'has_html', 'tags column':'tags_idx',
-  'notetype column':'note_type_idx', 'deck column':'deck_idx',
-  'guid column':'guid_idx'}
+  'html':'has_html',
+  'tags column':'tags_idx',
+  'notetype column':'note_type_idx',
+  'deck column':'deck_idx',
+  'guid column':'guid_idx',
+  _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME:'separator',
+}
 _ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
