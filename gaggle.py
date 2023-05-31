@@ -554,6 +554,5 @@ class AnkiDeck:
       self.write_header(f)
       w = csv.writer(f, dialect='excel-tab')
       for card in self.cards:
-        card_strs = card.as_str_list()
-        w.writerow(card_strs)
+        card.write_as_tsv(w)
 

@@ -90,3 +90,6 @@ class AnkiCard:
       str_list.append(field_value)
     return str_list
 
+  def write_as_tsv(self, w):
+    content = self.as_str_list()
+    w.writerow(content)
