@@ -533,3 +533,23 @@ class AnkiDeck:
   def get_header_setting(self, setting: str, default: Any = None):
     header = self.get_header()
     return header.get(setting, default)
+
+  def write_header(self, f):
+    """
+
+    Args:
+      f:
+
+    Returns:
+    Raises:
+      KeyError: If AnkiDeck.header contains a header name not supported
+    """
+    header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
+    header_seperator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
+    header_copy = copy_and_reformat(self.header, direction=GAGGLE_TO_ANKI)
+    for setting_name in _ANKI_ORDERED_HEADER:
+      setting_value = header_copy[setting_name]
+      if setting_value is not None:
+        header_line = (f'{header_symbol}{setting_name}'
+                       f'{header_seperator}{setting_value}\n')
+        f.write(header_line)
