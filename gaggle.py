@@ -126,10 +126,10 @@ def _initialise_decks(exported_file, field_names):
 
 def _generate_unique_file_path(filename, extension, destination):
   if not filename:
-    filename = _GENERIC_EXPORT_FILE_NAME
+    filename = GENERIC_EXPORT_FILE_NAME
   file_exists = True
   tag = 0
-  if filename == _GENERIC_EXPORT_FILE_NAME:
+  if filename == GENERIC_EXPORT_FILE_NAME:
     modified_filename = f'{filename}{tag}'
     tag += 1
   else:
