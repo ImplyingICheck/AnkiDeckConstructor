@@ -355,10 +355,13 @@ class Gaggle:
     if isinstance(deck, int):
       deck = self.get_deck(deck)
     file_path = _generate_unique_file_path(filename, extension, destination)
-    if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
-      deck.write_as_tsv(file_path)
-    else:
-      raise ValueError('Failed to write Deck to file. Expected a valid '
+    encoding = _ANKI_EXPORT_ENCODING
+    mode = 'x'
+    with open(file_path, mode=mode, encoding=encoding, newline='') as f:
+      if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
+        deck.write_as_tsv(f)
+      else:
+        raise ValueError('Failed to write Deck to file. Expected a valid '
                        f'file_type but instead got {file_type}')
 
   def write_all_decks_to_file(self, **kwargs: Iterable[str | None]) -> None:
@@ -547,12 +550,9 @@ class AnkiDeck:
                        f'{header_seperator}{setting_value}\n')
         f.write(header_line)
 
-  def write_as_tsv(self, file_path):
-    encoding = _ANKI_EXPORT_ENCODING
-    mode = 'x'
-    with open(file_path, mode=mode, encoding=encoding, newline='') as f:
-      self.write_header(f)
-      w = csv.writer(f, dialect='excel-tab')
-      for card in self.cards:
-        card.write_as_tsv(w)
+  def write_as_tsv(self, f):
+    self.write_header(f)
+    w = csv.writer(f, dialect='excel-tab')
+    for card in self.cards:
+      card.write_as_tsv(w)
 
