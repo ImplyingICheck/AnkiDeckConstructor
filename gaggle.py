@@ -553,3 +553,14 @@ class AnkiDeck:
         header_line = (f'{header_symbol}{setting_name}'
                        f'{header_seperator}{setting_value}\n')
         f.write(header_line)
+
+  def write_as_tsv(self, file_path):
+    encoding = _ANKI_EXPORT_ENCODING
+    mode = 'x'
+    with open(file_path, mode=mode, encoding=encoding, newline='') as f:
+      self.write_header(f)
+      w = csv.writer(f, dialect='excel-tab')
+      for card in self.get_cards():
+        card_strs = card.as_str_list()
+        w.writerow(card_strs)
+
