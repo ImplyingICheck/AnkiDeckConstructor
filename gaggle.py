@@ -6,6 +6,7 @@ import csv
 import os.path
 import itertools
 import operator
+import enum
 from typing import overload, Any, List, Protocol, Self, TypeVar
 from collections.abc import Iterable, Iterator
 
@@ -35,12 +36,16 @@ _ANKI_ORDERED_HEADER = [
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
-_GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
-ANKI_TO_GAGGLE = 'anki_to_gaggle'
-GAGGLE_TO_ANKI = 'gaggle_to_anki'
-_DIRECTION_TRANSLATION_VALUE = {ANKI_TO_GAGGLE: -1, GAGGLE_TO_ANKI: 1}
-_DIRECTION_MAPPING = {ANKI_TO_GAGGLE: _ANKI_EXPORT_HEADER_MAPPING,
-                      GAGGLE_TO_ANKI: _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
+GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+class ReformatDirection(enum.StrEnum):
+  ANKI_TO_GAGGLE = 'anki_to_gaggle'
+  GAGGLE_TO_ANKI = 'gaggle_to_anki'
+_DIRECTION_TRANSLATION_VALUE = {ReformatDirection.ANKI_TO_GAGGLE: -1,
+                                ReformatDirection.GAGGLE_TO_ANKI: 1}
+_DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
+                        _ANKI_EXPORT_HEADER_MAPPING,
+                      ReformatDirection.GAGGLE_TO_ANKI:
+                        _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
 
 class HasIndex(Protocol):
   def __index__(self) -> int:
@@ -404,13 +409,13 @@ class Gaggle:
         print(card)
 
 
-def copy_and_reformat(original: dict, direction: 'ReformatDirection'):
+def copy_and_reformat(original: dict, direction: ReformatDirection):
   deep_copy = copy.deepcopy(original)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
 
-def reformat_header_settings(header: dict, direction: 'ReformatDirection'):
+def reformat_header_settings(header: dict, direction: ReformatDirection):
   """
 
   Args:
@@ -453,7 +458,7 @@ def read_header_settings(f):
 
 def parse_header_settings(f):
   header = read_header_settings(f)
-  reformat_header_settings(header, direction=ANKI_TO_GAGGLE)
+  reformat_header_settings(header, direction=ReformatDirection.ANKI_TO_GAGGLE)
   return header
 
 
@@ -540,7 +545,8 @@ class AnkiDeck:
     """
     header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
     header_seperator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
-    header_copy = copy_and_reformat(self.header, direction=GAGGLE_TO_ANKI)
+    header_copy = copy_and_reformat(self.header,
+                                    direction=ReformatDirection.GAGGLE_TO_ANKI)
     for setting_name in _ANKI_ORDERED_HEADER:
       setting_value = header_copy[setting_name]
       if setting_value is not None:
