@@ -8,6 +8,7 @@ import itertools
 import operator
 import enum
 from typing import overload, Any, List, Protocol, Self, TypeVar
+from _typeshed import SupportsWrite
 from collections.abc import Iterable, Iterator
 
 import exceptions
@@ -550,7 +551,7 @@ class AnkiDeck:
                        f'{header_seperator}{setting_value}\n')
         f.write(header_line)
 
-  def write_as_tsv(self, f):
+  def write_as_tsv(self, f: SupportsWrite[str]) -> None:
     self.write_header(f)
     w = csv.writer(f, dialect='excel-tab')
     for card in self.cards:
