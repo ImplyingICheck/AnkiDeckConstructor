@@ -518,14 +518,6 @@ class AnkiDeck:
   def __iter__(self):
     return iter(self.cards)
 
-  def get_cards(self) -> Iterable[ankicard.AnkiCard]:
-    """Getter method for AnkiDeck.cards
-
-    Returns:
-      Iterable of AnkiCards
-    """
-    return self.cards
-
   def get_header(self):
     return self.header
 
@@ -560,7 +552,7 @@ class AnkiDeck:
     with open(file_path, mode=mode, encoding=encoding, newline='') as f:
       self.write_header(f)
       w = csv.writer(f, dialect='excel-tab')
-      for card in self.get_cards():
+      for card in self.cards:
         card_strs = card.as_str_list()
         w.writerow(card_strs)
 
