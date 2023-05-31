@@ -349,15 +349,9 @@ class Gaggle:
     """
     if isinstance(deck, int):
       deck = self.get_deck(deck)
-    encoding = _ANKI_EXPORT_ENCODING
-    mode = 'x'
     file_path = _generate_unique_file_path(filename, extension, destination)
     if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
-      with open(file_path, mode=mode, encoding=encoding, newline='') as f:
-        w = csv.writer(f, dialect='excel-tab')
-        for card in deck:
-          card_strs = card.as_str_list()
-          w.writerow(card_strs)
+      deck.write_as_tsv(file_path)
     else:
       raise ValueError('Failed to write Deck to file. Expected a valid '
                        f'file_type but instead got {file_type}')
