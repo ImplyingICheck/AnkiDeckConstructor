@@ -431,7 +431,6 @@ def reformat_header_settings(header: dict, direction: ReformatDirection):
   Raises:
     KeyError: If argument passed for direction is not a supported conversion
   """
-  # TODO: make a custom exception, can shadow header[setting] KeyError
   translation = _DIRECTION_TRANSLATION_VALUE[direction]
   reformat_mapping = _DIRECTION_MAPPING[direction]
   reformatted_header = {}
