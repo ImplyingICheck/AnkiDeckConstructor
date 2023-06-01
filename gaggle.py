@@ -522,8 +522,23 @@ class AnkiDeck:
   def __iter__(self):
     return iter(self.cards)
 
-  def get_header_setting(self, setting: str, default: Any = None):
-    return self.header.get(setting, default)
+  def get_header_setting(self, setting_name: str,
+                         default: Any = None,
+                         ) -> str | int:
+    """Return the value of a header setting, referenced by name
+
+    Args:
+      setting_name: String representing the name of the setting, as named in
+      Gaggle representation. A conversion from Anki naming to Gaggle naming can
+      be referenced in _ANKI_EXPORT_HEADER_MAPPING.
+      default: The value to return if no header setting with the given name is
+      found.
+
+    Returns:
+      The found setting as stored. Else, default if a setting by name
+      setting_name is not found.
+    """
+    return self.header.get(setting_name, default)
 
   def write_header(self, f: SupportsWrite[str]) -> None:
     """Outputs header settings stored in self.header.
