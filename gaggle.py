@@ -522,12 +522,8 @@ class AnkiDeck:
   def __iter__(self):
     return iter(self.cards)
 
-  def get_header(self):
-    return self.header
-
   def get_header_setting(self, setting: str, default: Any = None):
-    header = self.get_header()
-    return header.get(setting, default)
+    return self.header.get(setting, default)
 
   def write_header(self, f: SupportsWrite[str]) -> None:
     """Outputs header settings stored in self.header.
