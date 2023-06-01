@@ -1,5 +1,5 @@
 """Base class for Anki card"""
-from typing import Protocol, Any, TypeVar
+from typing import Protocol, Any, TypeVar, List
 from collections.abc import Iterable
 from _csv import Dialect
 
@@ -86,7 +86,19 @@ class AnkiCard:
   def get_guid(self):
     return self.get_field('GUID')
 
-  def as_str_list(self):
+  def as_str_list(self) -> List[str]:
+    """Return data fields of AnkiCard. Preserves read in order.
+
+    Returns:
+      List of strings. Each string is an individual data value stored in
+      AnkiCard. The order of the strings is the same order as the AnkiCard was
+      read from file.
+
+      Assume a file with three values was read. For example:
+
+      [column0, column1, column2]
+
+    """
     str_list = []
     for name in self.field_names:
       field_value = self.get_field(name)
