@@ -556,4 +556,3 @@ class AnkiDeck:
     w = csv.writer(f, dialect='excel-tab')
     for card in self.cards:
       card.write_as_tsv(w)
-
