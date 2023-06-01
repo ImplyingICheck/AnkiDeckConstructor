@@ -547,7 +547,7 @@ class AnkiDeck:
     header_copy = copy_and_reformat(self.header,
                                     direction=ReformatDirection.GAGGLE_TO_ANKI)
     for setting_name in _ANKI_ORDERED_HEADER:
-      setting_value = header_copy[setting_name]
+      setting_value = header_copy.get(setting_name)
       if setting_value is not None:
         header_line = (f'{header_symbol}{setting_name}'
                        f'{header_seperator}{setting_value}\n')
