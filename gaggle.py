@@ -553,7 +553,7 @@ class AnkiDeck:
 
   def write_as_tsv(self, f: SupportsWrite[str]) -> None:
     """Outputs header settings associated with deck. Then outputs the data
-    fields of each card. One card per row.
+    fields of each AnkiCard stored in self.cards. One card per row.
 
     Args:
       f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
