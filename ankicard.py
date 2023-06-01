@@ -94,5 +94,11 @@ class AnkiCard:
     return str_list
 
   def write_as_tsv(self, w: SupportsWriteRow[str]) -> None:
+    """Output data fields of AnkiCard in TSV format.
+
+    Args:
+      w: A stream implementing writerow(). Must have internal formatting data.
+      See AnkiDeck.write_as_tsv() for an example using csv.writer.
+    """
     content = self.as_str_list()
     w.writerow(content)
