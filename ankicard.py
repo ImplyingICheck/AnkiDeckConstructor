@@ -72,14 +72,8 @@ class AnkiCard:
   def get_field(self, field_name):
     return self.fields[field_name]
 
-  def contains_html(self):
-    return self.has_html
-
   def get_tags(self):
     return self.get_field('Tags')
-
-  def get_field_names(self):
-    return self.field_names
 
   def get_note_type(self):
     return self.get_field('Note Type')
