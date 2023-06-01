@@ -484,6 +484,9 @@ def _parse_anki_export(
     _generate_field_names() for implementation details.
 
   Returns:
+    A Tuple(header, cards). header is a dictionary mapping setting names to
+    setting values. cards is a series of AnkiCards. Both are read from the
+    exported file.
 
   Raises:
     FileNotFoundError: If file specified by exported_file does not exist
