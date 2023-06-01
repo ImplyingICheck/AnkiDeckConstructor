@@ -492,7 +492,13 @@ def _parse_anki_export(exported_file, field_names=None):
 
 class AnkiDeck:
   """Represents a collection of Notes and Cards exported from Anki
-  (i.e. gaggle.AnkiCards)."""
+  (i.e. gaggle.AnkiCards).
+
+  Attributes:
+    header: A dictionary mapping setting names to the setting value. The setting
+    value is an int if it references a column of parsed data.
+    cards: An iterable of gaggle.AnkiCards
+  """
   def __init__(self,
                header: dict[str, str | int],
                cards: Iterable[ankicard.AnkiCard]):
