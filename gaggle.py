@@ -529,16 +529,18 @@ class AnkiDeck:
     header = self.get_header()
     return header.get(setting, default)
 
-  def write_header(self, f):
-    """
+  def write_header(self, f: SupportsWrite[str]) -> None:
+    """Outputs header settings stored in self.header.
+
+    Setting a header value to None will prevent it from being output.
 
     Args:
-      f:
-
-    Returns:
+      f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
+      example using open().
 
     Raises:
-      KeyError: If AnkiDeck.header contains a header name not supported
+      KeyError: If AnkiDeck.header contains a header name not supported by
+      reformat_header_settings()
     """
     header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
     header_seperator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
