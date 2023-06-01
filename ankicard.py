@@ -1,13 +1,15 @@
 """Base class for Anki card"""
 from typing import Protocol, Any, TypeVar
 from collections.abc import Iterable
-
+from _csv import Dialect
 
 _ANKI_HEADER_TRUE = 'true'
 _ANKI_HEADER_FALSE = 'false'
 
 T = TypeVar('T')
 class SupportsWriteRow(Protocol[T]):
+  @property
+  def dialect(self) -> Dialect: ...
   def writerow(self, row: Iterable[T]) -> Any: ...
 
 
