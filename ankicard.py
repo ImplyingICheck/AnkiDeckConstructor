@@ -14,6 +14,19 @@ class SupportsWriteRow(Protocol[T]):
 
 
 def _generate_field_names(field_names, n_fields):
+  """
+
+  Args:
+    field_names: The names which should be set for each delimited field in the
+    parsed file. Used for reference, does not modify read contents. Use '' to
+    apply a default field name. The length of field_names does not have to match
+    the length of the delimited fields. Missing names will be generated with a
+    default and extra names will be discarded.
+    n_fields: The number of fields contained in the AnkiCard.
+
+  Returns:
+
+  """
   if field_names is None:
     field_names = []
   if len(field_names) == n_fields:
