@@ -1,7 +1,14 @@
 """Base class for Anki card"""
+from typing import Protocol, Any, TypeVar
+from collections.abc import Iterable
+
 
 _ANKI_HEADER_TRUE = 'true'
 _ANKI_HEADER_FALSE = 'false'
+
+T = TypeVar('T')
+class SupportsWriteRow(Protocol[T]):
+  def writerow(self, row: Iterable[T]) -> Any: ...
 
 
 def _generate_field_names(field_names, n_fields):
@@ -90,6 +97,6 @@ class AnkiCard:
       str_list.append(field_value)
     return str_list
 
-  def write_as_tsv(self, w):
+  def write_as_tsv(self, w: SupportsWriteRow[str]) -> None:
     content = self.as_str_list()
     w.writerow(content)
