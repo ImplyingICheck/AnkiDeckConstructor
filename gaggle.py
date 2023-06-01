@@ -7,9 +7,9 @@ import os.path
 import itertools
 import operator
 import enum
-from typing import overload, Any, List, Protocol, Self, TypeVar
-from _typeshed import SupportsWrite
-from collections.abc import Iterable, Iterator
+from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple
+from _typeshed import SupportsWrite, StrOrBytesPath
+from collections.abc import Iterable, Iterator, Sized
 
 import exceptions
 import ankicard
@@ -64,8 +64,14 @@ class Falsy(Protocol):
   def __bool__(self) -> bool:
     return False
 
+class Appendable(Protocol):
+  def append(self, obj: Any) -> Any:
+    ...
+
 T = TypeVar('T')
 RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
+SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized, Appendable,
+                                  Iterable)
 
 
 @overload
@@ -465,12 +471,17 @@ def parse_header_settings(f):
   return header
 
 
-def _parse_anki_export(exported_file, field_names=None):
-  """
+def _parse_anki_export(
+    exported_file: StrOrBytesPath,
+    field_names: SizedAppendableIterable | None = None,
+) -> Tuple[Dict[str, str | int], Iterable[ankicard.AnkiCard]]:
+  """Reads in a file exported from Anki. Determines file type through the header
+  then parses all data accompanying the header using the header settings.
 
   Args:
-    exported_file:
-    field_names:
+    exported_file: A reference to a file exported by Anki
+    field_names: The names to be used for referencing AnkiCard fields. See
+    _generate_field_names() for implementation details.
 
   Returns:
 
