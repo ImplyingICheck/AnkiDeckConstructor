@@ -427,15 +427,30 @@ def copy_and_reformat(original: dict, direction: ReformatDirection):
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
+@overload
+def reformat_header_settings(header: dict[str, str | int],
+                             direction: ReformatDirection.GAGGLE_TO_ANKI,
+                             ) -> None: ...
+@overload
+def reformat_header_settings(header: dict[str, str],
+                             direction: ReformatDirection,
+                             ) -> None: ...
+def reformat_header_settings(header, direction):
+  """Convert between Anki header naming style and Gaggle header naming style.
+  For more information on Anki header style, see documentation for
+  gaggle.AnkiCard for a link to official Anki documentation. The Gaggle header
+  naming style is snake case and uses 0-indexing.
 
-def reformat_header_settings(header: dict, direction: ReformatDirection):
-  """
+  Transforms header in place.
 
   Args:
-    header:
-    direction:
+    header: A header read from an Anki file. Original entries are deleted and
+    replaced by reformatted entries.
+    direction: Denotes which style format the header should be converted to.
+    Specified by gaggle.ReformatDirection enum.
 
   Returns:
+    None; transforms header in place.
 
   Raises:
     KeyError: If argument passed for direction is not a supported conversion
@@ -444,7 +459,6 @@ def reformat_header_settings(header: dict, direction: ReformatDirection):
   reformat_mapping = _DIRECTION_MAPPING[direction]
   reformatted_header = {}
   for setting, value in header.items():
-    value = header[setting]
     new_key = reformat_mapping[setting]
     new_value = transform_integer_value(value,
                                         translation=translation)
