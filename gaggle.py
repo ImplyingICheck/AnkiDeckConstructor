@@ -78,35 +78,6 @@ _DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
                       ReformatDirection.GAGGLE_TO_ANKI:
                         _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
 
-@overload
-def transform_integer_value(value: T,
-                            translation: int = 0,
-                            scale: int = 1,
-                            ) -> T:
-  ...
-@overload
-def transform_integer_value(value: HasIndex,
-                            translation: int = 0,
-                            scale: int = 1,
-                            ) -> HasIndex | int:
-  ...
-@overload
-def transform_integer_value(value: RealNumber,
-                            translation: int = 0,
-                            scale: int = 1,
-                            ) -> int:
-  ...
-def transform_integer_value(value, translation=0, scale=1):
-  try:
-    transformed_value = int(value)
-  except ValueError:
-    return value
-  else:
-    transformed_value += translation
-    transformed_value *= scale
-    return transformed_value
-
-
 # TODO: Move to class declaration of AnkiCard after refactor
 def create_cards_from_tsv(f, field_names=None, header=None):
   cards = csv.reader(f, dialect='excel-tab')
@@ -421,6 +392,35 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+
+@overload
+def transform_integer_value(value: T,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> T:
+  ...
+@overload
+def transform_integer_value(value: HasIndex,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> HasIndex | int:
+  ...
+@overload
+def transform_integer_value(value: RealNumber,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> int:
+  ...
+def transform_integer_value(value, translation=0, scale=1):
+  try:
+    transformed_value = int(value)
+  except ValueError:
+    return value
+  else:
+    transformed_value += translation
+    transformed_value *= scale
+    return transformed_value
 
 
 def copy_and_reformat(original: Dict[str, T],
