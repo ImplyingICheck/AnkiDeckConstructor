@@ -532,7 +532,7 @@ class AnkiDeck:
       structure.
 
     Returns:
-      A gaggle.AnkiDeck object
+      A gaggle.AnkiDeck object. See AnkiDeck documentation for more information.
 
     Raises:
       FileNotFoundError: If file specified by file does not exist
