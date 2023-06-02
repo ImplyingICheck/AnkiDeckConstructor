@@ -422,20 +422,15 @@ class Gaggle:
         print(card)
 
 
-def copy_and_reformat(original: dict, direction: ReformatDirection):
+def copy_and_reformat(original: Dict, direction: ReformatDirection):
   deep_copy = copy.deepcopy(original)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
-@overload
-def reformat_header_settings(header: dict[str, str | int],
-                             direction: ReformatDirection.GAGGLE_TO_ANKI,
-                             ) -> None: ...
-@overload
-def reformat_header_settings(header: dict[str, str],
+
+def reformat_header_settings(header: Dict[str, Any],
                              direction: ReformatDirection,
-                             ) -> None: ...
-def reformat_header_settings(header, direction):
+                             ) -> None:
   """Convert between Anki header naming style and Gaggle header naming style.
   For more information on Anki header style, see documentation for
   gaggle.AnkiCard for a link to official Anki documentation. The Gaggle header
