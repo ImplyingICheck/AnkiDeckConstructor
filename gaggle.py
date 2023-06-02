@@ -7,12 +7,14 @@ import os.path
 import itertools
 import operator
 import enum
-from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple
-from _typeshed import SupportsWrite, StrOrBytesPath
+from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING
 from collections.abc import Iterable, Iterator, Sized
 
 import exceptions
 import ankicard
+
+if TYPE_CHECKING:
+  from _typeshed import SupportsWrite, StrOrBytesPath
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
