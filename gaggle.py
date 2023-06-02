@@ -43,8 +43,8 @@ if TYPE_CHECKING:
   ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
                                 SupportsReadline, Seekable)
 
-_ANKI_EXPORT_HEADER_SYMBOL = '#'
-_ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
+_ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
+_ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME = 'separator'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
@@ -470,8 +470,8 @@ def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
   Returns:
     A mapping of settings specified by the Anki file header.
   """
-  header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
-  header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
+  header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
+  header_separator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
   header = {}
   reader_pos = f.tell()
   while f.read(1) == header_symbol:
@@ -606,8 +606,8 @@ class AnkiDeck:
       KeyError: If AnkiDeck.header contains a header name not supported by
       reformat_header_settings()
     """
-    header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
-    header_seperator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
+    header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
+    header_seperator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
     header_copy = copy_and_reformat(self.header,
                                     direction=ReformatDirection.GAGGLE_TO_ANKI)
     for setting_name in _ANKI_ORDERED_HEADER:
