@@ -7,7 +7,7 @@ import os.path
 import itertools
 import operator
 import enum
-from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING
+from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union
 from collections.abc import Iterable, Iterator, Sized
 
 import exceptions
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     def seek(self, position: T) -> Any: ...
 
   T = TypeVar('T')
+  S = TypeVar('S')
   RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
   SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
                                     Appendable, Iterable)
@@ -422,7 +423,9 @@ class Gaggle:
         print(card)
 
 
-def copy_and_reformat(original: Dict, direction: ReformatDirection):
+def copy_and_reformat(original: Dict[str, T],
+                      direction: ReformatDirection,
+                      ) -> Dict[str, T | int]:
   deep_copy = copy.deepcopy(original)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
@@ -493,7 +496,8 @@ def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
   return header
 
 
-def parse_header_settings(f: ReadableAndSeekable) -> Dict[str, str | int]:
+def parse_header_settings(f: ReadableAndSeekable,
+                          ) -> Dict[str, Union[str | int]]:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
 
@@ -515,7 +519,7 @@ def parse_header_settings(f: ReadableAndSeekable) -> Dict[str, str | int]:
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
     field_names: SizedAppendableIterable | None = None,
-) -> Tuple[Dict[str, str | int], Iterable[ankicard.AnkiCard]]:
+) -> Tuple[Dict[str, Union[str | int]], Iterable[ankicard.AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
@@ -556,7 +560,7 @@ class AnkiDeck:
     cards: An iterable of gaggle.AnkiCards
   """
   def __init__(self,
-               header: dict[str, str | int],
+               header: dict[str, Union[str | int]],
                cards: Iterable[ankicard.AnkiCard]):
     self.header = header
     self.cards = cards
