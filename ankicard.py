@@ -1,5 +1,6 @@
 """Base class for Anki card"""
-from typing import Protocol, Any, TypeVar, List
+import collections
+from typing import Protocol, Any, TypeVar, List, OrderedDict
 from collections.abc import Iterable
 from _csv import Dialect
 
@@ -39,11 +40,22 @@ def _generate_field_names(field_names, n_fields):
     return field_names
 
 
-def _generate_field_dict(field_names, fields):
-  field_dict = {}
-  for idx in range(len(field_names)):
-    field_dict[field_names[idx]] = fields[idx]
-  return field_dict
+def _generate_field_dict(field_names: Iterable,
+                         fields: Iterable,
+                         ) -> OrderedDict[str, str]:
+  """Create a dictionary mapping given names to a value in AnkiCard.
+
+  Args:
+    field_names: Names used for referencing values stored in the field dict.
+    Special properties exist for fields named by the header.
+    Must match the length of fields.
+    fields: The values to be stored in an AnkiCard.
+
+  Returns:
+    Named values whose iteration order is the same as read from file.
+  """
+  name_field_tuples = zip(field_names, fields, strict=True)
+  return collections.OrderedDict(name_field_tuples)
 
 
 def _parse_bool(bool_as_str):
