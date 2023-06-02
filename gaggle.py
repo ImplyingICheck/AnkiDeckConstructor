@@ -552,7 +552,7 @@ def _parse_anki_export(
   Args:
     exported_file: A reference to a file exported by Anki
     field_names: The names to be used for referencing AnkiCard fields. See
-    _generate_field_names() for implementation details.
+      _generate_field_names() for implementation details.
 
   Returns:
     A Tuple(header, cards). header is a dictionary mapping setting names to
