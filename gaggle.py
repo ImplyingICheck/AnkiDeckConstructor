@@ -660,6 +660,9 @@ class AnkiDeck:
     """Outputs header settings associated with deck. Then outputs the data
     fields of each AnkiCard stored in self.cards. One card per row.
 
+    Requires only a stream to improve reusability as a public API. See
+    Gaggle.write_deck_to_file() for a simpler setup.
+
     Args:
       f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
       example using open().
