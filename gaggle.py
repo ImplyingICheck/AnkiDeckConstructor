@@ -491,6 +491,8 @@ def _parse_anki_export(
     exported file.
 
   Raises:
+    OSError: Uses Python builtin open(). See Pythong documentation for further
+    information.
     FileNotFoundError: If file specified by exported_file does not exist
   """
   seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME
