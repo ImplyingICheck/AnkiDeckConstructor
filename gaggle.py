@@ -484,7 +484,7 @@ def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
   return header
 
 
-def parse_header_settings(f: ReadableAndSeekable):
+def parse_header_settings(f: ReadableAndSeekable) -> Dict[str, str | int]:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
 
