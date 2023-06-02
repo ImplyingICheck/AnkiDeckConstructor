@@ -1,61 +1,85 @@
 """Base class for collection, a class representing multiple Anki Decks."""
+from __future__ import annotations
+
+import copy
 import csv
 import os.path
 import itertools
 import operator
-from typing import overload, Any, List, Protocol
-from collections.abc import Iterable, Iterator
+import enum
+from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union
+from collections.abc import Iterable, Iterator, Sized
 
 import exceptions
 import ankicard
 
-_ANKI_EXPORT_HEADER_SYMBOL = '#'
-_ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
+if TYPE_CHECKING:
+  from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
+
+  class HasIndex(Protocol):
+    def __index__(self) -> int: ...
+
+  class HasInt(Protocol):
+    def __int__(self) -> int: ...
+
+  class HasTruncate(Protocol):
+    def __trunc__(self) -> int: ...
+
+  class Falsy(Protocol):
+    def __bool__(self) -> bool:
+      return False
+
+  class Appendable(Protocol):
+    def append(self, obj: Any) -> Any: ...
+
+  class Seekable(Protocol):
+    def tell(self) -> T: ...
+    def seek(self, position: T) -> Any: ...
+
+  T = TypeVar('T')
+  S = TypeVar('S')
+  RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
+  SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
+                                    Appendable, Iterable)
+  ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
+                                SupportsReadline, Seekable)
+
+_ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
+_ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
-_ANKI_EXPORT_HEADER_SETTING_SEPARATOR = 'separator'
+_ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME = 'separator'
+_ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
 _ANKI_EXPORT_HEADER_MAPPING = {
-  'html':'has_html', 'tags column':'tags_idx',
-  'notetype column':'note_type_idx', 'deck column':'deck_idx',
-  'guid column':'guid_idx'}
-_ANKI_EXPORT_HEADER_MAPPING_KEYS = set(_ANKI_EXPORT_HEADER_MAPPING.keys())
+  'html':'has_html',
+  'tags column':'tags_idx',
+  'notetype column':'note_type_idx',
+  'deck column':'deck_idx',
+  'guid column':'guid_idx',
+  _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME:'separator',
+}
+_ANKI_EXPORT_HEADER_MAPPING_REVERSE = {
+  v: k for k, v in _ANKI_EXPORT_HEADER_MAPPING.items()
+}
+_ANKI_ORDERED_HEADER = [
+  'separator', 'html', 'guid column', 'notetype column', 'deck column',
+  'tags column'
+]
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
 
-_GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+class ReformatDirection(enum.StrEnum):
+  ANKI_TO_GAGGLE = 'anki_to_gaggle'
+  GAGGLE_TO_ANKI = 'gaggle_to_anki'
+_DIRECTION_TRANSLATION_VALUE = {ReformatDirection.ANKI_TO_GAGGLE: -1,
+                                ReformatDirection.GAGGLE_TO_ANKI: 1}
+_DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
+                        _ANKI_EXPORT_HEADER_MAPPING,
+                      ReformatDirection.GAGGLE_TO_ANKI:
+                        _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
 
-class Falsy(Protocol):
-  def __bool__(self) -> bool:
-    return False
-
-
-def convert_ankicol_to_zero_based_numbering(ankicol_value):
-  try:
-    ankicol = int(ankicol_value)
-  except ValueError:
-    return ankicol_value
-  else:
-    zero_based_idx = ankicol - 1
-    return zero_based_idx
-
-
-def reformat_header_settings(header):
-  reformated_settings = []
-  new_settings = {}
-  for setting in header.keys():
-    if setting in _ANKI_EXPORT_HEADER_MAPPING_KEYS:
-      value = header[setting]
-      new_key = _ANKI_EXPORT_HEADER_MAPPING[setting]
-      new_value = convert_ankicol_to_zero_based_numbering(value)
-      new_settings[new_key] = new_value
-      reformated_settings.append(setting)
-  for setting in reformated_settings:
-    del header[setting]
-  del header[_ANKI_EXPORT_HEADER_SETTING_SEPARATOR]
-  header.update(new_settings)
-
-
+# TODO: Move to class declaration of AnkiCard after refactor
 def create_cards_from_tsv(f, field_names=None, header=None):
-  reformat_header_settings(header)
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
@@ -64,44 +88,30 @@ def create_cards_from_tsv(f, field_names=None, header=None):
   return deck
 
 
-def parse_txt_file_header(f):
-  header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
-  header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
-  header = {}
-  reader_pos = f.tell()
-  while f.read(1) == header_symbol:
-    line = f.readline()
-    setting, value = line.split(header_separator)
-    value = value.rstrip()
-    header[setting] = value
-    reader_pos = f.tell()
-  f.seek(reader_pos)
-  return header
-
-
-def parse_anki_export(exported_file, field_names=None):
-  deck = []
-  with open(exported_file, newline='', encoding=_ANKI_EXPORT_ENCODING) as f:
-    header = parse_txt_file_header(f)
-    if header['separator'] == 'tab':
-      deck = create_cards_from_tsv(f, field_names=field_names, header=header)
-  return deck
-
-
 def _initialise_decks(exported_file, field_names):
-  initial_deck = []
-  if not exported_file:
-    return initial_deck
-  initial_deck.append(parse_anki_export(exported_file, field_names))
-  return initial_deck
+  """
+
+  Args:
+    exported_file:
+    field_names:
+
+  Returns:
+
+  Raises:
+    FileNotFoundError: If file specified by exported_file does not exist
+  """
+  if exported_file:
+    return [AnkiDeck.from_file(exported_file, field_names)]
+  else:
+    return []
 
 
 def _generate_unique_file_path(filename, extension, destination):
   if not filename:
-    filename = _GENERIC_EXPORT_FILE_NAME
+    filename = GENERIC_EXPORT_FILE_NAME
   file_exists = True
   tag = 0
-  if filename == _GENERIC_EXPORT_FILE_NAME:
+  if filename == GENERIC_EXPORT_FILE_NAME:
     modified_filename = f'{filename}{tag}'
     tag += 1
   else:
@@ -245,7 +255,7 @@ def generate_flattened_kwargs_remove_sentinel(sentinel: Any = None,
                                         keyword_argument_pairs,
                                         itertools.repeat(sentinel_filter))
   for flat_kwargs in filtered_keyword_argument_pairs:
-    yield flat_kwargs
+    yield dict(flat_kwargs)
 
 
 class Gaggle:
@@ -254,17 +264,37 @@ class Gaggle:
   Handles deck construction and organisation.
   """
   def __init__(self, exported_file=None, field_names=None):
+    """
+
+    Args:
+      exported_file:
+      field_names:
+
+    Raises:
+      FileNotFoundError: If file specified by exported_file does not exist
+    """
     self.decks = _initialise_decks(exported_file, field_names)
+
+  def __iter__(self):
+    return iter(self._get_decks())
 
   def add_deck(self, deck):
     self.decks.append(deck)
 
-  def add_deck_from_file(self, file):
-    deck = parse_anki_export(file)
+  def add_deck_from_file(self, file: str) -> None:
+    """
+
+    Args:
+      file:
+
+    Returns:
+
+    """
+    deck = AnkiDeck.from_file(file)
     self.add_deck(deck)
 
   @overload
-  def write_deck_to_file(self, deck: 'Deck',
+  def write_deck_to_file(self, deck: AnkiDeck,
                          filename: str | None = None,
                          file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
                          destination: str = '.',
@@ -284,12 +314,13 @@ class Gaggle:
                          destination='.', extension=''):
     """Writes a deck to a location in file storage. Supports various file naming
     features. See documentation for _generate_unique_file_path() for details on
-    how the path is calculated.
+    how the path is calculated. Will generate a unique filename if one is not
+    given.
 
     Args:
       deck: A Deck object or an index indicating which deck to write.
-      filename: The name to give to the newly created file. If none, name is
-      generated by _generate_unique_file_path().
+      filename: The name to give to the newly created file. If none or if not
+      unique, filename is generated by _generate_unique_file_path().
       file_type: The file type as designated by Anki. See
       (https://docs.ankiweb.net/exporting.html) for more information.
       destination: The directory to which the file will be written to.
@@ -301,18 +332,19 @@ class Gaggle:
       details (https://docs.python.org/3/library/functions.html#open)
       FileExistsError: _generate_unique_file_path() will generate unique
       filenames if a file already exists in a given path. Will not raise.
+      ValueError: If argument passed for file_type is not a supported file type
     """
     if isinstance(deck, int):
       deck = self.get_deck(deck)
+    file_path = _generate_unique_file_path(filename, extension, destination)
     encoding = _ANKI_EXPORT_ENCODING
     mode = 'x'
-    file_path = _generate_unique_file_path(filename, extension, destination)
-    if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
-      with open(file_path, mode=mode, encoding=encoding, newline='') as f:
-        w = csv.writer(f, dialect='excel-tab')
-        for card in deck:
-          card_strs = card.as_str_list()
-          w.writerow(card_strs)
+    with open(file_path, mode=mode, encoding=encoding, newline='') as f:
+      if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
+        deck.write_as_tsv(f)
+      else:
+        raise ValueError('Failed to write Deck to file. Expected a valid '
+                       f'file_type but instead got {file_type}')
 
   def write_all_decks_to_file(self, **kwargs: Iterable[str | None]) -> None:
     """Writes all Decks stored in Gaggle to file. **kwargs is flattened and
@@ -327,6 +359,7 @@ class Gaggle:
 
     Raises:
       DecksNotWrittenException: If method fails to write all Decks to file.
+      ValueError: See documentation for write_deck_to_file() for details
     """
     flat_kwargs = generate_flattened_kwargs_remove_sentinel(sentinel='',
                                                             **kwargs)
@@ -337,7 +370,7 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> List['Deck']:
+  def _get_decks(self) -> List[AnkiDeck]:
     """Getter for list containing Deck objects in Gaggle
 
     Returns:
@@ -359,3 +392,282 @@ class Gaggle:
       print(f'Deck {num}:')
       for card in deck:
         print(card)
+
+
+@overload
+def transform_integer_value(value: T,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> T:
+  ...
+@overload
+def transform_integer_value(value: HasIndex,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> HasIndex | int:
+  ...
+@overload
+def transform_integer_value(value: RealNumber,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> int:
+  ...
+def transform_integer_value(value, translation=0, scale=1):
+  """Attempt to convert value into an int(). If successful, translate the
+  resulting int and then scale it. If value cannot be converted, it is returned
+  as is.
+
+  For specifics on which values can be converted, see Python documentation for
+  int().
+
+  Args:
+    value: The item to be cast into int
+    translation: A mathematical translation, added to value
+    scale: A mathematical scaling, multiplied with value
+
+  Returns:
+    The value unchanged if it cannot be converted. Otherwise, a translated then
+    scaled int.
+  """
+  try:
+    transformed_value = int(value)
+  except ValueError:
+    return value
+  else:
+    transformed_value += translation
+    transformed_value *= scale
+    return transformed_value
+
+
+def _copy_and_reformat(original: Dict[str, T],
+                       direction: ReformatDirection,
+                       ) -> Dict[str, Union[T | int]]:
+  """Helper function to create a copy of a dictionary and format it as desired.
+  Intended for internal use when writing a deck to stream.
+
+  Args:
+    original: A dictionary to make a deep copy of. Not modified.
+    direction: The format style which the return value should take.
+
+  Returns:
+    A deep copy of the original dictionary, reformatted as specified.
+  """
+  deep_copy = copy.deepcopy(original)
+  reformat_header_settings(deep_copy, direction)
+  return deep_copy
+
+
+def reformat_header_settings(header: Dict[str, Any],
+                             direction: ReformatDirection,
+                             ) -> None:
+  """Convert between Anki header naming style and Gaggle header naming style.
+  For more information on Anki header style, see documentation for
+  gaggle.AnkiCard for a link to official Anki documentation. The Gaggle header
+  naming style is snake case and uses 0-indexing.
+
+  Transforms header in place.
+
+  Args:
+    header: A header read from an Anki file. Original entries are deleted and
+    replaced by reformatted entries.
+    direction: Denotes which style format the header should be converted to.
+    Specified by gaggle.ReformatDirection enum.
+
+  Returns:
+    None; transforms header in place.
+
+  Raises:
+    KeyError: If argument passed for direction is not a supported conversion
+  """
+  translation = _DIRECTION_TRANSLATION_VALUE[direction]
+  reformat_mapping = _DIRECTION_MAPPING[direction]
+  reformatted_header = {}
+  for setting, value in header.items():
+    new_key = reformat_mapping[setting]
+    new_value = transform_integer_value(value,
+                                        translation=translation)
+    reformatted_header[new_key] = new_value
+  header.clear()
+  header.update(reformatted_header)
+
+
+def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
+  """Reads in Anki Header from a stream and stores it into a dictionary. Strips
+  all trailing whitespace characters from header value.
+
+  Assumes input of a specific format, see documentation for parameter f.
+
+  Args:
+    f: A stream containing Anki Header information. Assumes input of format
+    <header symbol><header setting name><header delimiter><header setting value>
+    where header symbol is the denotation that the line is a part of the file
+    header. The stream is left at the first line which does not contain
+    <header symbol> as its first component. <header symbol> and
+    <header delimiter> are specified by gaggle module constants.
+
+  Returns:
+    A mapping of settings specified by the Anki file header.
+  """
+  header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
+  header_separator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
+  header = {}
+  reader_pos = f.tell()
+  while f.read(1) == header_symbol:
+    line = f.readline()
+    setting, value = line.split(header_separator)
+    value = value.rstrip()
+    header[setting] = value
+    reader_pos = f.tell()
+  f.seek(reader_pos)
+  return header
+
+
+def parse_header_settings(f: ReadableAndSeekable,
+                          ) -> Dict[str, Union[str | int]]:
+  """Reads in all Anki file header settings, producing a mapping of setting
+  name to setting value. Then reformats this mapping and returns it.
+
+  Args:
+    f: A stream from which lines are read. Read until no longer contains header
+    information; stream left at first line with no header information, may be
+    depleted. See read_header_settings() for more information.
+
+  Returns:
+    A mapping of setting name to setting value. The settings are formatted to
+    ensure internal consistency with AnkiCard and AnkiDeck. See
+    reformat_header_settings() documentation for more information.
+  """
+  header = read_header_settings(f)
+  reformat_header_settings(header, direction=ReformatDirection.ANKI_TO_GAGGLE)
+  return header
+
+
+def _parse_anki_export(
+    exported_file: StrOrBytesPath,
+    field_names: SizedAppendableIterable | None = None,
+) -> Tuple[Dict[str, Union[str | int]], Iterable[ankicard.AnkiCard]]:
+  """Reads in a file exported from Anki. Determines file type through the header
+  then parses all data accompanying the header using the header settings.
+
+  Args:
+    exported_file: A reference to a file exported by Anki
+    field_names: The names to be used for referencing AnkiCard fields. See
+      _generate_field_names() for implementation details.
+
+  Returns:
+    A Tuple(header, cards). header is a dictionary mapping setting names to
+    setting values. cards is a series of AnkiCards. Both are read from the
+    exported file.
+
+  Raises:
+    OSError: Uses Python builtin open(). See Pythong documentation for further
+    information.
+    FileNotFoundError: If file specified by exported_file does not exist
+  """
+  seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME
+  tsv = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING
+  cards = []
+  with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
+    header = parse_header_settings(f)
+    if header[seperator_setting_key] == tsv:
+      del header[seperator_setting_key]
+      cards = create_cards_from_tsv(f, field_names=field_names, header=header)
+      header[seperator_setting_key] = tsv
+  return header, cards
+
+
+class AnkiDeck:
+  """Represents a collection of Notes and Cards exported from Anki
+  (i.e. gaggle.AnkiCards).
+
+  Attributes:
+    header: A dictionary mapping setting names to the setting value. The setting
+    value is an int if it references a column of parsed data.
+    cards: An iterable of gaggle.AnkiCards
+  """
+  def __init__(self,
+               header: dict[str, Union[str | int]],
+               cards: Iterable[ankicard.AnkiCard]):
+    self.header = header
+    self.cards = cards
+
+  @classmethod
+  def from_file(cls, file, field_names=None) -> Self:
+    """Factory method to create an AnkiDeck directly from a file.
+
+    Args:
+      file: A string representing the file path of the information used to
+      construct the deck.
+      field_names: Strings representing the name of each field in each card. See
+      documentation for _generate_field_names() for details on usage and
+      structure.
+
+    Returns:
+      A gaggle.AnkiDeck object. See AnkiDeck documentation for more information.
+
+    Raises:
+      FileNotFoundError: If file specified by file does not exist
+    """
+    header, cards = _parse_anki_export(file, field_names)
+    return cls(header, cards)
+
+  def __iter__(self):
+    return iter(self.cards)
+
+  def get_header_setting(self, setting_name: str,
+                         default: Any = None,
+                         ) -> str | int:
+    """Return the value of a header setting, referenced by name
+
+    Args:
+      setting_name: String representing the name of the setting, as named in
+      Gaggle representation. A conversion from Anki naming to Gaggle naming can
+      be referenced in _ANKI_EXPORT_HEADER_MAPPING.
+      default: The value to return if no header setting with the given name is
+      found.
+
+    Returns:
+      The found setting as stored. Else, default if a setting by name
+      setting_name is not found.
+    """
+    return self.header.get(setting_name, default)
+
+  def write_header(self, f: SupportsWrite[str]) -> None:
+    """Outputs header settings stored in self.header.
+
+    Setting a header value to None will prevent it from being output.
+
+    Args:
+      f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
+      example using open().
+
+    Raises:
+      KeyError: If AnkiDeck.header contains a header name not supported by
+      reformat_header_settings()
+    """
+    header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
+    header_seperator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
+    header_copy = _copy_and_reformat(self.header,
+                                     direction=ReformatDirection.GAGGLE_TO_ANKI)
+    for setting_name in _ANKI_ORDERED_HEADER:
+      setting_value = header_copy.get(setting_name)
+      if setting_value is not None:
+        header_line = (f'{header_symbol}{setting_name}'
+                       f'{header_seperator}{setting_value}\n')
+        f.write(header_line)
+
+  def write_as_tsv(self, f: SupportsWrite[str]) -> None:
+    """Outputs header settings associated with deck. Then outputs the data
+    fields of each AnkiCard stored in self.cards. One card per row.
+
+    Requires only a stream to improve reusability as a public API. See
+    Gaggle.write_deck_to_file() for a simpler setup.
+
+    Args:
+      f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
+      example using open().
+    """
+    self.write_header(f)
+    w = csv.writer(f, dialect='excel-tab')
+    for card in self.cards:
+      card.write_as_tsv(w)

@@ -1,10 +1,33 @@
 """Base class for Anki card"""
+import collections
+from typing import Protocol, Any, TypeVar, List, OrderedDict
+from collections.abc import Iterable
+from _csv import Dialect
 
 _ANKI_HEADER_TRUE = 'true'
 _ANKI_HEADER_FALSE = 'false'
 
+T = TypeVar('T')
+class SupportsWriteRow(Protocol[T]):
+  @property
+  def dialect(self) -> Dialect: ...
+  def writerow(self, row: Iterable[T]) -> Any: ...
+
 
 def _generate_field_names(field_names, n_fields):
+  """
+
+  Args:
+    field_names: The names which should be set for each delimited field in the
+    parsed file. Used for reference, does not modify read contents. Use '' to
+    apply a default field name. The length of field_names does not have to match
+    the length of the delimited fields. Missing names will be generated with a
+    default and extra names will be discarded.
+    n_fields: The number of fields contained in the AnkiCard.
+
+  Returns:
+
+  """
   if field_names is None:
     field_names = []
   if len(field_names) == n_fields:
@@ -17,11 +40,22 @@ def _generate_field_names(field_names, n_fields):
     return field_names
 
 
-def _generate_field_dict(field_names, fields):
-  field_dict = {}
-  for idx in range(len(field_names)):
-    field_dict[field_names[idx]] = fields[idx]
-  return field_dict
+def _generate_field_dict(field_names: Iterable,
+                         fields: Iterable,
+                         ) -> OrderedDict[str, str]:
+  """Create a dictionary mapping given names to a value in AnkiCard.
+
+  Args:
+    field_names: Names used for referencing values stored in the field dict.
+    Special properties exist for fields named by the header.
+    Must match the length of fields.
+    fields: The values to be stored in an AnkiCard.
+
+  Returns:
+    Named values whose iteration order is the same as read from file.
+  """
+  name_field_tuples = zip(field_names, fields, strict=True)
+  return collections.OrderedDict(name_field_tuples)
 
 
 def _parse_bool(bool_as_str):
@@ -59,20 +93,14 @@ class AnkiCard:
 
   def _overlay_anki_header_names(self, anki_header_names):
     for name, field_idx in anki_header_names.items():
-      if field_idx:
+      if field_idx is not None:
         self.field_names[field_idx] = name
 
   def get_field(self, field_name):
     return self.fields[field_name]
 
-  def contains_html(self):
-    return self.has_html
-
   def get_tags(self):
     return self.get_field('Tags')
-
-  def get_field_names(self):
-    return self.field_names
 
   def get_note_type(self):
     return self.get_field('Note Type')
@@ -83,10 +111,34 @@ class AnkiCard:
   def get_guid(self):
     return self.get_field('GUID')
 
-  def as_str_list(self):
+  def as_str_list(self) -> List[str]:
+    """Return data fields of AnkiCard. Preserves read in order.
+
+    Returns:
+      List of strings. Each string is an individual data value stored in
+      AnkiCard. The order of the strings is the same order as the AnkiCard was
+      read from file.
+
+      Assume a file with three values was read. For example:
+
+      [column0, column1, column2]
+
+    """
     str_list = []
-    for name in self.get_field_names():
+    for name in self.field_names:
       field_value = self.get_field(name)
       str_list.append(field_value)
     return str_list
 
+  def write_as_tsv(self, w: SupportsWriteRow[str]) -> None:
+    """Output data fields of AnkiCard in TSV format.
+
+    Requires only a stream to improve reusability as a public API. See
+    AnkiDeck.write_as_tsv() for a simpler setup.
+
+    Args:
+      w: The stream to write to. Must have internal formatting data.
+        See AnkiDeck.write_as_tsv() for an example using csv.writer.
+    """
+    content = self.as_str_list()
+    w.writerow(content)
