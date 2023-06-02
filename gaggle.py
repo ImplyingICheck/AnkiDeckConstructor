@@ -423,9 +423,19 @@ def transform_integer_value(value, translation=0, scale=1):
     return transformed_value
 
 
-def copy_and_reformat(original: Dict[str, T],
-                      direction: ReformatDirection,
-                      ) -> Dict[str, T | int]:
+def _copy_and_reformat(original: Dict[str, T],
+                       direction: ReformatDirection,
+                       ) -> Dict[str, Union[T | int]]:
+  """Helper function to create a copy of a dictionary and format it as desired.
+  Intended for internal use when writing a deck to stream.
+
+  Args:
+    original: A dictionary to make a deep copy of. Not modified.
+    direction: The format style which the return value should take.
+
+  Returns:
+    A deep copy of the original dictionary, reformatted as specified.
+  """
   deep_copy = copy.deepcopy(original)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
@@ -621,8 +631,8 @@ class AnkiDeck:
     """
     header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
     header_seperator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
-    header_copy = copy_and_reformat(self.header,
-                                    direction=ReformatDirection.GAGGLE_TO_ANKI)
+    header_copy = _copy_and_reformat(self.header,
+                                     direction=ReformatDirection.GAGGLE_TO_ANKI)
     for setting_name in _ANKI_ORDERED_HEADER:
       setting_value = header_copy.get(setting_name)
       if setting_value is not None:
