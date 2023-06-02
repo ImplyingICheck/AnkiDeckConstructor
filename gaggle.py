@@ -453,7 +453,23 @@ def reformat_header_settings(header: dict, direction: ReformatDirection):
   header.update(reformatted_header)
 
 
-def read_header_settings(f):
+def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
+  """Reads in Anki Header from a stream and stores it into a dictionary. Strips
+  all trailing whitespace characters from header value.
+
+  Assumes input of a specific format, see documentation for parameter f.
+
+  Args:
+    f: A stream containing Anki Header information. Assumes input of format
+    <header symbol><header setting name><header delimiter><header setting value>
+    where header symbol is the denotation that the line is a part of the file
+    header. The stream is left at the first line which does not contain
+    <header symbol> as its first component. <header symbol> and
+    <header delimiter> are specified by gaggle module constants.
+
+  Returns:
+    A mapping of settings specified by the Anki file header.
+  """
   header_symbol = _ANKI_EXPORT_HEADER_SYMBOL
   header_separator = _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL
   header = {}
