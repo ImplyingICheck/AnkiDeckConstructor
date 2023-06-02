@@ -14,7 +14,34 @@ import exceptions
 import ankicard
 
 if TYPE_CHECKING:
-  from _typeshed import SupportsWrite, StrOrBytesPath
+  from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
+
+  class HasIndex(Protocol):
+    def __index__(self) -> int: ...
+
+  class HasInt(Protocol):
+    def __int__(self) -> int: ...
+
+  class HasTruncate(Protocol):
+    def __trunc__(self) -> int: ...
+
+  class Falsy(Protocol):
+    def __bool__(self) -> bool:
+      return False
+
+  class Appendable(Protocol):
+    def append(self, obj: Any) -> Any: ...
+
+  class Seekable(Protocol):
+    def tell(self) -> T: ...
+    def seek(self, position: T) -> Any: ...
+
+  T = TypeVar('T')
+  RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
+  SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
+                                    Appendable, Iterable)
+  ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
+                                SupportsReadline, Seekable)
 
 _ANKI_EXPORT_HEADER_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_SEPARATOR_SYMBOL = ':'
@@ -49,32 +76,6 @@ _DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
                         _ANKI_EXPORT_HEADER_MAPPING,
                       ReformatDirection.GAGGLE_TO_ANKI:
                         _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
-
-class HasIndex(Protocol):
-  def __index__(self) -> int:
-    ...
-
-class HasInt(Protocol):
-  def __int__(self) -> int:
-    ...
-
-class HasTruncate(Protocol):
-  def __trunc__(self) -> int:
-    ...
-
-class Falsy(Protocol):
-  def __bool__(self) -> bool:
-    return False
-
-class Appendable(Protocol):
-  def append(self, obj: Any) -> Any:
-    ...
-
-T = TypeVar('T')
-RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
-SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized, Appendable,
-                                  Iterable)
-
 
 @overload
 def transform_integer_value(value: T,
