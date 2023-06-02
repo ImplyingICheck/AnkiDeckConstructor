@@ -413,6 +413,22 @@ def transform_integer_value(value: RealNumber,
                             ) -> int:
   ...
 def transform_integer_value(value, translation=0, scale=1):
+  """Attempt to convert value into an int(). If successful, translate the
+  resulting int and then scale it. If value cannot be converted, it is returned
+  as is.
+
+  For specifics on which values can be converted, see Python documentation for
+  int().
+
+  Args:
+    value: The item to be cast into int
+    translation: A mathematical translation, added to value
+    scale: A mathematical scaling, multiplied with value
+
+  Returns:
+    The value unchanged if it cannot be converted. Otherwise, a translated then
+    scaled int.
+  """
   try:
     transformed_value = int(value)
   except ValueError:
