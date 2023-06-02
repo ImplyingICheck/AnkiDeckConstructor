@@ -468,7 +468,20 @@ def read_header_settings(f):
   return header
 
 
-def parse_header_settings(f):
+def parse_header_settings(f: ReadableAndSeekable):
+  """Reads in all Anki file header settings, producing a mapping of setting
+  name to setting value. Then reformats this mapping and returns it.
+
+  Args:
+    f: A stream from which lines are read. Read until no longer contains header
+    information; stream left at first line with no header information, may be
+    depleted. See read_header_settings() for more information.
+
+  Returns:
+    A mapping of setting name to setting value. The settings are formatted to
+    ensure internal consistency with AnkiCard and AnkiDeck. See
+    reformat_header_settings() documentation for more information.
+  """
   header = read_header_settings(f)
   reformat_header_settings(header, direction=ReformatDirection.ANKI_TO_GAGGLE)
   return header
