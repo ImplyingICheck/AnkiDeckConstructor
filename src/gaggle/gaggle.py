@@ -559,7 +559,7 @@ def parse_header_settings(f: ReadableAndSeekable,
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
     field_names: SizedAppendableIterable | None = None,
-) -> Tuple[Dict[str, Union[str | int]], Iterable[ankicard.AnkiCard]]:
+) -> Tuple[Dict[str, Union[str | int]], Iterable[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
@@ -601,7 +601,7 @@ class AnkiDeck:
   """
   def __init__(self,
                header: dict[str, Union[str | int]],
-               cards: Iterable[ankicard.AnkiCard]):
+               cards: Iterable[AnkiCard]):
     self.header = header
     self.cards = cards
 
