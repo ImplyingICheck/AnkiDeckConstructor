@@ -23,3 +23,7 @@ from gaggle import exceptions
 @pytest.fixture
 def deck_index():
   return 42
+
+
+class TestDecksNotWrittenException:
+  pass
