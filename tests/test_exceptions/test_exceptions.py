@@ -36,3 +36,6 @@ class TestDecksNotWrittenException:
               f'Last deck successfully written was the deck at: '
               f'Index {deck_index}')
 
+  def test_decks_not_written_exception_init_with_int(self):
+    assert self.test_exception
+
