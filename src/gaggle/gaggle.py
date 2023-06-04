@@ -102,16 +102,6 @@ _DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
                       ReformatDirection.GAGGLE_TO_ANKI:
                         _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
 
-# TODO: Move to class declaration of AnkiCard after refactor
-def create_cards_from_tsv(f, field_names=None, header=None):
-  cards = csv.reader(f, dialect='excel-tab')
-  deck = []
-  for card in cards:
-    card = ankicard.AnkiCard(card, field_names=field_names, **header)
-    deck.append(card)
-  return deck
-
-
 def _initialise_decks(exported_file, field_names):
   """
 
@@ -696,6 +686,14 @@ class AnkiDeck:
     for card in self.cards:
       card.write_as_tsv(w)
 
+
+def create_cards_from_tsv(f, field_names=None, header=None):
+  cards = csv.reader(f, dialect='excel-tab')
+  deck = []
+  for card in cards:
+    card = AnkiCard(card, field_names=field_names, **header)
+    deck.append(card)
+  return deck
 
 
 def _generate_field_names(field_names, n_fields):
