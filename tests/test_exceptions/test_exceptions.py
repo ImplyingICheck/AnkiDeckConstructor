@@ -30,4 +30,9 @@ class TestDecksNotWrittenException:
   def decks_not_written_exception(self, deck_index):
     self.test_exception = exceptions.DecksNotWrittenException(deck_index)
 
+  @pytest.fixture
+  def decks_not_written_exception_string_representation(self, deck_index):
+    return (f'Failed to write all Decks to the file. '
+              f'Last deck successfully written was the deck at: '
+              f'Index {deck_index}')
 
