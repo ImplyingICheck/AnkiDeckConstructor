@@ -23,6 +23,7 @@ _ANKI_HEADER_TRUE = 'true'
 _ANKI_HEADER_FALSE = 'false'
 
 T = TypeVar('T')
+S = TypeVar('S')
 class SupportsWriteRow(Protocol[T]):
   @property
   def dialect(self) -> Dialect: ...
@@ -55,9 +56,9 @@ def _generate_field_names(field_names, n_fields):
     return field_names
 
 
-def _generate_field_dict(field_names: Iterable,
-                         fields: Iterable,
-                         ) -> OrderedDict[str, str]:
+def _generate_field_dict(field_names: Iterable[T],
+                         fields: Iterable[S],
+                         ) -> OrderedDict[T, S]:
   """Create a dictionary mapping given names to a value in AnkiCard.
 
   Args:
