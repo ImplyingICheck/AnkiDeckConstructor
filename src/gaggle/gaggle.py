@@ -25,8 +25,8 @@ import enum
 from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union
 from collections.abc import Iterable, Iterator, Sized
 
-from src.gaggle import exceptions
-from src.gaggle import ankicard
+from gaggle import exceptions
+from gaggle import ankicard
 
 if TYPE_CHECKING:
   from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
