@@ -12,6 +12,7 @@
       <excludePattern pattern="poetry.lock" />
       <excludePattern pattern="pyproject.toml" />
       <excludePattern pattern="README.md" />
+      <excludePattern pattern="LICENSE" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
