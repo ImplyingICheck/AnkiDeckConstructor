@@ -16,3 +16,10 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=redefined-outer-name
+import pytest
+from gaggle import exceptions
+
+
+@pytest.fixture
+def deck_index():
+  return 42
