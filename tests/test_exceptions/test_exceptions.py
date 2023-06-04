@@ -45,3 +45,9 @@ class TestDecksNotWrittenException:
   ):
     assert self.test_exception.last_deck_written == deck_index
 
+  def test_decks_not_written_exception_str(
+      self,
+      decks_not_written_exception_string_representation
+  ):
+    assert (str(self.test_exception) ==
+            decks_not_written_exception_string_representation)
