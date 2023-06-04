@@ -54,8 +54,12 @@ if TYPE_CHECKING:
     def tell(self) -> T: ...
     def seek(self, position: T) -> Any: ...
 
-  T = TypeVar('T')
-  S = TypeVar('S')
+  class SupportsWriteRow(Protocol[T]):
+    @property
+    def dialect(self) -> Dialect: ...
+
+    def writerow(self, row: Iterable[T]) -> Any: ...
+
   RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
   SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
                                     Appendable, Iterable)
