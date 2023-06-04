@@ -39,6 +39,10 @@ class TestDecksNotWrittenException:
   def test_decks_not_written_exception_init_with_int(self):
     assert self.test_exception
 
+  def test_decks_not_written_exception_init_with_none(self):
+    self.test_exception = exceptions.DecksNotWrittenException(None)
+    assert self.test_exception
+
   def test_decks_not_written_exception_last_deck_written_property(
       self,
       deck_index
