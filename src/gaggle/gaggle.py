@@ -31,6 +31,9 @@ from gaggle import ankicard
 if TYPE_CHECKING:
   from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
+  T = TypeVar('T')
+  S = TypeVar('S')
+
   class HasIndex(Protocol):
     def __index__(self) -> int: ...
 
