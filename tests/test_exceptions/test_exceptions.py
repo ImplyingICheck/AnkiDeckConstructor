@@ -26,4 +26,8 @@ def deck_index():
 
 
 class TestDecksNotWrittenException:
-  pass
+  @pytest.fixture(autouse=True)
+  def decks_not_written_exception(self, deck_index):
+    self.test_exception = exceptions.DecksNotWrittenException(deck_index)
+
+
