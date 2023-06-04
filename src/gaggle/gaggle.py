@@ -16,6 +16,7 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 from __future__ import annotations
 
+import collections
 import copy
 import csv
 import os.path
@@ -26,7 +27,6 @@ from _csv import Dialect
 from typing import Iterable, OrderedDict, overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union, Iterator, Sized
 
 from gaggle import exceptions
-from gaggle import ankicard
 
 if TYPE_CHECKING:
   from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
