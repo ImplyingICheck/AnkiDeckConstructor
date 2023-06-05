@@ -781,7 +781,16 @@ class AnkiCard:
   def get_field(self, field_name):
     return self.fields[field_name]
 
-  def get_tags(self):
+  @property
+  def tags(self) -> str:
+    """This property can be a reserved name, a field cannot be manually named
+    Tags. It must be set through the Anki file header.
+
+    Returns: Anki style tags, delimited with '::'
+
+    Raises:
+      KeyError: If no field with the name tags exists
+    """
     return self.get_field('Tags')
 
   def get_note_type(self):
