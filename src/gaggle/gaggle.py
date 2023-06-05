@@ -71,12 +71,20 @@ if TYPE_CHECKING:
   class SizedAppendableProtocol(Sized, SupportsAppend, Protocol):
     ...
 
+  class SizedAppendableIterableProtocol(SizedAppendableProtocol, Iterable,
+                                        Protocol):
+    ...
+
+  class ReadableAndSeekableProtocol(SupportsRead, SupportsReadline, Seekable,
+                                    Protocol):
+    ...
+
   RealNumber = TypeVar('RealNumber', bound=SupportsInt | SupportsTrunc)
   SizedAppendable = TypeVar('SizedAppendable', bound=SizedAppendableProtocol)
-  SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
-                                    SupportsAppend, Iterable)
-  ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
-                                SupportsReadline, Seekable)
+  SizedAppendableIterable = TypeVar('SizedAppendableIterable',
+                                    bound=SizedAppendableIterableProtocol)
+  ReadableAndSeekable = TypeVar('ReadableAndSeekable',
+                                bound=ReadableAndSeekableProtocol)
 
 _ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
