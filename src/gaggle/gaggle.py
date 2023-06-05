@@ -24,7 +24,8 @@ import itertools
 import operator
 import enum
 from _csv import Dialect
-from typing import Iterable, OrderedDict, overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union, Iterator, Sized
+from typing import overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
+from collections.abc import Iterable, Iterator, Sized
 
 from gaggle import exceptions
 
@@ -411,7 +412,7 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> List[AnkiDeck]:
+  def _get_decks(self) -> list[AnkiDeck]:
     """Getter for list containing Deck objects in Gaggle
 
     Returns:
@@ -480,9 +481,9 @@ def transform_integer_value(value, translation=0, scale=1):
     return transformed_value
 
 
-def _copy_and_reformat(original: Dict[str, T],
+def _copy_and_reformat(original: dict[str, _T],
                        direction: ReformatDirection,
-                       ) -> Dict[str, Union[T | int]]:
+                       ) -> dict[str, _T | int] | dict[str, _T]:
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
@@ -498,7 +499,7 @@ def _copy_and_reformat(original: Dict[str, T],
   return deep_copy
 
 
-def reformat_header_settings(header: Dict[str, Any],
+def reformat_header_settings(header: dict[str, Any],
                              direction: ReformatDirection,
                              ) -> None:
   """Convert between Anki header naming style and Gaggle header naming style.
@@ -532,7 +533,7 @@ def reformat_header_settings(header: Dict[str, Any],
   header.update(reformatted_header)
 
 
-def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
+def read_header_settings(f: ReadableAndSeekable) -> dict[str, str]:
   """Reads in Anki Header from a stream and stores it into a dictionary. Strips
   all trailing whitespace characters from header value.
 
@@ -564,7 +565,7 @@ def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
 
 
 def parse_header_settings(f: ReadableAndSeekable,
-                          ) -> Dict[str, Union[str | int]]:
+                          ) -> dict[str, str | int] | dict[str, str]:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
 
@@ -586,7 +587,7 @@ def parse_header_settings(f: ReadableAndSeekable,
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
     field_names: SizedAppendableIterable | None = None,
-) -> Tuple[Dict[str, Union[str | int]], Iterable[AnkiCard]]:
+) -> tuple[dict[str, str | int], Iterable[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
@@ -627,7 +628,7 @@ class AnkiDeck:
     cards: An iterable of gaggle.AnkiCards
   """
   def __init__(self,
-               header: dict[str, Union[str | int]],
+               header: dict[str, str | int],
                cards: Iterable[AnkiCard]):
     self.header = header
     self.cards = cards
@@ -723,7 +724,9 @@ def create_cards_from_tsv(f, field_names=None, header=None):
   return deck
 
 
-def _generate_field_names(field_names, n_fields):
+def _generate_field_names(field_names: SizedAppendable,
+                          n_fields: int,
+                          ) -> SizedAppendable | list:
   """
 
   Args:
@@ -885,7 +888,7 @@ class AnkiCard:
   def get_field(self, field_name):
     return self.fields[field_name]
 
-  def as_str_list(self) -> List[str]:
+  def as_str_list(self) -> list[str]:
     """Return data fields of AnkiCard. Preserves read in order.
 
     Returns:
