@@ -31,8 +31,10 @@ from gaggle import exceptions
 if TYPE_CHECKING:
   from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
-  T = TypeVar('T')
-  S = TypeVar('S')
+  _T = TypeVar('_T')
+  _T_co = TypeVar('_T_co', covariant=True)
+  _T_contra = TypeVar('_T_contra', contravariant=True)
+  _S = TypeVar('_S')
 
   class SupportsIndex(Protocol):
     def __index__(self) -> int:
@@ -50,33 +52,35 @@ if TYPE_CHECKING:
     def __bool__(self) -> bool:
       return False
 
-  class SupportsAppend(Protocol):
-    def append(self, obj: Any) -> Any:
+  class SupportsAppend(Protocol[_T_contra]):
+    def append(self, obj: _T_contra) -> Any:
       ...
 
   class Seekable(Protocol):
-    def tell(self) -> T:
+    def tell(self) -> Any:
       ...
-    def seek(self, position: T) -> Any:
+    def seek(self, position: Any) -> Any:
       ...
 
-  class SupportsWriteRow(Protocol[T]):
+  class SupportsWriteRow(Protocol):
     @property
     def dialect(self) -> Dialect:
       ...
 
-    def writerow(self, row: Iterable[T]) -> Any:
+    def writerow(self, row: Iterable[_T_co]) -> Any:
       ...
 
-  class SizedAppendableProtocol(Sized, SupportsAppend, Protocol):
+  class SizedAppendableProtocol(Sized, SupportsAppend[_T_contra],
+                                Protocol[_T_contra]):
     ...
 
-  class SizedAppendableIterableProtocol(SizedAppendableProtocol, Iterable,
-                                        Protocol):
+  class SizedAppendableIterableProtocol(SizedAppendableProtocol[_T],
+                                        Iterable[_T], Protocol[_T]):
     ...
 
-  class ReadableAndSeekableProtocol(SupportsRead, SupportsReadline, Seekable,
-                                    Protocol):
+  class ReadableAndSeekableProtocol(SupportsRead[_T_co],
+                                    SupportsReadline[_T_co], Seekable,
+                                    Protocol[_T_co]):
     ...
 
   RealNumber = TypeVar('RealNumber', bound=SupportsInt | SupportsTrunc)
