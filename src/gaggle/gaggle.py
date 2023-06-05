@@ -68,7 +68,11 @@ if TYPE_CHECKING:
     def writerow(self, row: Iterable[T]) -> Any:
       ...
 
-  RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
+  class SizedAppendableProtocol(Sized, SupportsAppend, Protocol):
+    ...
+
+  RealNumber = TypeVar('RealNumber', SupportsInt, SupportsTruncate)
+  SizedAppendable = TypeVar('SizedAppendable', bound=SizedAppendableProtocol)
   SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
                                     SupportsAppend, Iterable)
   ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
