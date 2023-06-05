@@ -71,6 +71,9 @@ _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME = 'separator'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
+class HeaderBoolean(enum.StrEnum):
+  FALSE_ = 'false'
+  TRUE_ = 'true'
 _ANKI_EXPORT_HEADER_TRUE = 'true'
 _ANKI_EXPORT_HEADER_FALSE = 'false'
 _ANKI_EXPORT_HEADER_MAPPING = {
@@ -740,10 +743,10 @@ def _generate_field_dict(field_names: Iterable[T],
   return collections.OrderedDict(name_field_tuples)
 
 
-def _parse_bool(bool_as_str):
-  if bool_as_str == _ANKI_EXPORT_HEADER_TRUE:
+def _parse_bool(bool_as_str) -> bool:
+  if bool_as_str == HeaderBoolean.TRUE_:
     return True
-  elif bool_as_str == _ANKI_EXPORT_HEADER_FALSE:
+  elif bool_as_str == HeaderBoolean.FALSE_:
     return False
   else:
     return TypeError
