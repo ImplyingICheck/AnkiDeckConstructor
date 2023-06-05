@@ -34,35 +34,43 @@ if TYPE_CHECKING:
   T = TypeVar('T')
   S = TypeVar('S')
 
-  class HasIndex(Protocol):
-    def __index__(self) -> int: ...
+  class SupportsIndex(Protocol):
+    def __index__(self) -> int:
+      ...
 
-  class HasInt(Protocol):
-    def __int__(self) -> int: ...
+  class SupportsInt(Protocol):
+    def __int__(self) -> int:
+      ...
 
-  class HasTruncate(Protocol):
-    def __trunc__(self) -> int: ...
+  class SupportsTruncate(Protocol):
+    def __trunc__(self) -> int:
+      ...
 
   class Falsy(Protocol):
     def __bool__(self) -> bool:
       return False
 
-  class Appendable(Protocol):
-    def append(self, obj: Any) -> Any: ...
+  class SupportsAppend(Protocol):
+    def append(self, obj: Any) -> Any:
+      ...
 
   class Seekable(Protocol):
-    def tell(self) -> T: ...
-    def seek(self, position: T) -> Any: ...
+    def tell(self) -> T:
+      ...
+    def seek(self, position: T) -> Any:
+      ...
 
   class SupportsWriteRow(Protocol[T]):
     @property
-    def dialect(self) -> Dialect: ...
+    def dialect(self) -> Dialect:
+      ...
 
-    def writerow(self, row: Iterable[T]) -> Any: ...
+    def writerow(self, row: Iterable[T]) -> Any:
+      ...
 
   RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
   SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
-                                    Appendable, Iterable)
+                                    SupportsAppend, Iterable)
   ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
                                 SupportsReadline, Seekable)
 
@@ -418,10 +426,10 @@ def transform_integer_value(value: T,
                             ) -> T:
   ...
 @overload
-def transform_integer_value(value: HasIndex,
+def transform_integer_value(value: SupportsIndex,
                             translation: int = 0,
                             scale: int = 1,
-                            ) -> HasIndex | int:
+                            ) -> SupportsIndex | int:
   ...
 @overload
 def transform_integer_value(value: RealNumber,
