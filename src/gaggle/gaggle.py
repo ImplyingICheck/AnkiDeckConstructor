@@ -743,7 +743,7 @@ def _generate_field_dict(field_names: Iterable[T],
   return collections.OrderedDict(name_field_tuples)
 
 
-def _parse_bool(bool_as_str) -> bool:
+def _parse_anki_header_bool(bool_as_str) -> bool:
   if bool_as_str == HeaderBoolean.TRUE_:
     return True
   elif bool_as_str == HeaderBoolean.FALSE_:
@@ -764,7 +764,7 @@ class AnkiCard:
   """
   def __init__(self, fields, has_html=False, tags_idx=None, field_names=None,
                note_type_idx=None, deck_idx=None, guid_idx=None):
-    self.has_html = _parse_bool(has_html)
+    self.has_html = _parse_anki_header_bool(has_html)
     self.tags_field_idx = tags_idx
     self.note_type_field_idx = note_type_idx
     self.deck_field_idx = deck_idx
