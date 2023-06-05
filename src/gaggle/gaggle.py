@@ -743,7 +743,21 @@ def _generate_field_dict(field_names: Iterable[T],
   return collections.OrderedDict(name_field_tuples)
 
 
-def _parse_anki_header_bool(bool_as_str) -> bool:
+def _parse_anki_header_bool(bool_as_str: HeaderBoolean) -> bool:
+  """Translate boolean notation from Anki generated file header to Python
+  bool type.
+
+  Args:
+    bool_as_str: The string representation of a boolean value as used internally
+    by Anki
+
+  Returns:
+    True or False depending on value parsed from the AnkiHeader.
+
+  Raises:
+    ValueError: If bool_as_str is not the representation for True or False used
+    by Anki
+  """
   if bool_as_str == HeaderBoolean.TRUE_:
     return True
   elif bool_as_str == HeaderBoolean.FALSE_:
