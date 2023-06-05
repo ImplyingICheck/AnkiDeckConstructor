@@ -770,17 +770,6 @@ class AnkiCard:
     self._overlay_anki_header_names(anki_header_names)
     self.fields = _generate_field_dict(self.field_names, fields)
 
-  def __repr__(self):
-    return str(self.fields)
-
-  def _overlay_anki_header_names(self, anki_header_names):
-    for name, field_idx in anki_header_names.items():
-      if field_idx is not None:
-        self.field_names[field_idx] = name
-
-  def get_field(self, field_name):
-    return self.fields[field_name]
-
   @property
   def tags(self) -> str:
     """This property is a reserved name, a field cannot be manually named
@@ -839,6 +828,17 @@ class AnkiCard:
       KeyError: If no field with the name 'GUID' exists
     """
     return self.get_field('GUID')
+
+  def __repr__(self):
+    return str(self.fields)
+
+  def _overlay_anki_header_names(self, anki_header_names):
+    for name, field_idx in anki_header_names.items():
+      if field_idx is not None:
+        self.field_names[field_idx] = name
+
+  def get_field(self, field_name):
+    return self.fields[field_name]
 
   def as_str_list(self) -> List[str]:
     """Return data fields of AnkiCard. Preserves read in order.
