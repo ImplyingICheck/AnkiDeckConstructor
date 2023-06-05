@@ -809,7 +809,7 @@ class AnkiCard:
     return self.get_field('Note Type')
 
   @property
-  def deck_name(self):
+  def deck_name(self) -> str:
     """This property is a reserved name, a field cannot be manually named
     Deck. It must be set using the deck_idx parameter of AnkiCard.
 
@@ -825,7 +825,19 @@ class AnkiCard:
     """
     return self.get_field('Deck')
 
-  def get_guid(self):
+  @property
+  def guid(self) -> str:
+    """This property is a reserved name, a field cannot be manually named
+    GUID. It must be set using the guid_idx parameter of AnkiCard.
+
+    Returns:
+      A GUID used internally by the Anki program. It is used to update existing
+      cards should a card with a matching GUID be imported. Per Anki
+      documentation, it is not recommended to manually set this value yourself.
+
+    Raises:
+      KeyError: If no field with the name 'GUID' exists
+    """
     return self.get_field('GUID')
 
   def as_str_list(self) -> List[str]:
