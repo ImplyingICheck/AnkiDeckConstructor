@@ -796,12 +796,12 @@ class AnkiCard:
   @property
   def note_type(self) -> str:
     """This property is a reserved name, a field cannot be manually named
-        Note Type. It must be set through the Anki file header.
+    Note Type. It must be set through the Anki file header.
 
-        Returns: Anki program note type
+    Returns: Anki program note type
 
-        Raises:
-          KeyError: If no field with the name 'Note Type' exists
+    Raises:
+      KeyError: If no field with the name 'Note Type' exists
         """
     return self.get_field('Note Type')
 
