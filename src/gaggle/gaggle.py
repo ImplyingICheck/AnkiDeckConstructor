@@ -749,7 +749,9 @@ def _parse_bool(bool_as_str) -> bool:
   elif bool_as_str == HeaderBoolean.FALSE_:
     return False
   else:
-    return TypeError
+    raise ValueError(f'Expected {HeaderBoolean.TRUE_} or '
+                     f'{HeaderBoolean.FALSE_} but instead got '
+                     f'{bool_as_str}')
 
 
 class AnkiCard:
