@@ -436,10 +436,10 @@ class Gaggle:
 
 
 @overload
-def transform_integer_value(value: T,
+def transform_integer_value(value: RealNumber,
                             translation: int = 0,
                             scale: int = 1,
-                            ) -> T:
+                            ) -> int:
   ...
 @overload
 def transform_integer_value(value: SupportsIndex,
@@ -448,10 +448,10 @@ def transform_integer_value(value: SupportsIndex,
                             ) -> SupportsIndex | int:
   ...
 @overload
-def transform_integer_value(value: RealNumber,
+def transform_integer_value(value: _T,
                             translation: int = 0,
                             scale: int = 1,
-                            ) -> int:
+                            ) -> _T:
   ...
 def transform_integer_value(value, translation=0, scale=1):
   """Attempt to convert value into an int(). If successful, translate the
