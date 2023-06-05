@@ -776,8 +776,14 @@ class AnkiCard:
   Permanent Reference [09 May 2023]:
   https://github.com/ankitects/anki-manual/blob/0aa372146d10e299631e361769f41533a6d4a417/src/importing.md?plain=1#L196-L220
   """
-  def __init__(self, fields, has_html=False, tags_idx=None, field_names=None,
-               note_type_idx=None, deck_idx=None, guid_idx=None):
+  def __init__(self,
+               fields,
+               has_html: HeaderBoolean = HeaderBoolean.FALSE_,
+               tags_idx=None,
+               field_names=None,
+               note_type_idx=None,
+               deck_idx=None,
+               guid_idx=None):
     self.has_html = _parse_anki_header_bool(has_html)
     self.tags_field_idx = tags_idx
     self.note_type_field_idx = note_type_idx
