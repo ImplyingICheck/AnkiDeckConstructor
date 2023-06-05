@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     def __int__(self) -> int:
       ...
 
-  class SupportsTruncate(Protocol):
+  class SupportsTrunc(Protocol):
     def __trunc__(self) -> int:
       ...
 
@@ -71,7 +71,7 @@ if TYPE_CHECKING:
   class SizedAppendableProtocol(Sized, SupportsAppend, Protocol):
     ...
 
-  RealNumber = TypeVar('RealNumber', SupportsInt, SupportsTruncate)
+  RealNumber = TypeVar('RealNumber', bound=SupportsInt | SupportsTrunc)
   SizedAppendable = TypeVar('SizedAppendable', bound=SizedAppendableProtocol)
   SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
                                     SupportsAppend, Iterable)
