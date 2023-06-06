@@ -564,6 +564,7 @@ def read_header_settings(f: ReadableAndSeekable) -> dict[str, str]:
     line = f.readline()
     setting, value = line.split(header_separator)
     value = value.rstrip()
+    value = transform_integer_value(value)
     header[setting] = value
     reader_pos = f.tell()
   f.seek(reader_pos)
