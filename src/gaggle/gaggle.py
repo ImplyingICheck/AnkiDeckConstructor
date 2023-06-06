@@ -738,7 +738,7 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
 
 
 def _generate_field_names(field_names: Iterator[str],
-                          n_fields: int,
+                          fields: Iterator[_T],
                           reserved_names: Mapping[int, str],
                           ) -> Iterator[str]:
   """
@@ -756,7 +756,7 @@ def _generate_field_names(field_names: Iterator[str],
   """
   for count in itertools.count():
     name = next(field_names, None)
-    if count >= n_fields:
+    if (_ := next(fields, None)) is None:
       if name is not None:
         warnings.warn(f'More field names passed in than fields exist. '
                       f'Discarding remainder starting from: \'{name}\'.',
@@ -821,7 +821,7 @@ class AnkiCard:
   https://github.com/ankitects/anki-manual/blob/0aa372146d10e299631e361769f41533a6d4a417/src/importing.md?plain=1#L196-L220
   """
   def __init__(self,
-               fields,
+               fields: Iterable[str],
                has_html: HeaderBoolean = HeaderBoolean.FALSE_,
                tags_idx: int | None = None,
                field_names: Iterable[str] | None = None,
@@ -838,7 +838,7 @@ class AnkiCard:
       for index, name in zip(property_indexes, property_names, strict=True)
       if index is not None
     }
-    field_names = _generate_field_names(iter(field_names), len(fields),
+    field_names = _generate_field_names(iter(field_names), iter(fields),
                                         reserved_names)
     self.fields = _generate_field_dict(iter(field_names), iter(fields))
 
