@@ -90,6 +90,7 @@ if TYPE_CHECKING:
                                     bound=SizedAppendableIterableProtocol)
   ReadableAndSeekable = TypeVar('ReadableAndSeekable',
                                 bound=ReadableAndSeekableProtocol)
+  AnkiHeader = TypeVar('AnkiHeader', dict[str, str | int], dict[str, str])
 
 _ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
@@ -486,9 +487,17 @@ def transform_integer_value(value, translation=0, scale=1):
     return transformed_value
 
 
+@overload
+def _copy_and_reformat(original: AnkiHeader,
+                       direction: ReformatDirection,
+                       ) -> AnkiHeader:
+  ...
+@overload
 def _copy_and_reformat(original: Mapping[str, _T],
                        direction: ReformatDirection,
                        ) -> dict[str, _T | int] | dict[str, _T]:
+  ...
+def _copy_and_reformat(original, direction):
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
@@ -539,7 +548,7 @@ def reformat_header_settings(header: dict[str, Any],
   header.update(reformatted_header)
 
 
-def read_header_settings(f: ReadableAndSeekable) -> dict[str, str]:
+def read_header_settings(f: ReadableAndSeekable) -> AnkiHeader:
   """Reads in Anki Header from a stream and stores it into a dictionary. Strips
   all trailing whitespace characters from header value.
 
@@ -572,7 +581,7 @@ def read_header_settings(f: ReadableAndSeekable) -> dict[str, str]:
 
 
 def parse_header_settings(f: ReadableAndSeekable,
-                          ) -> dict[str, str | int] | dict[str, str]:
+                          ) -> AnkiHeader:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
 
@@ -594,7 +603,7 @@ def parse_header_settings(f: ReadableAndSeekable,
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
     field_names: SizedAppendableIterable | None = None,
-) -> tuple[dict[str, str | int], Iterable[AnkiCard]]:
+) -> tuple[AnkiHeader, Iterable[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
@@ -635,7 +644,7 @@ class AnkiDeck:
     cards: An iterable of gaggle.AnkiCards
   """
   def __init__(self,
-               header: dict[str, str | int],
+               header: AnkiHeader,
                cards: Iterable[AnkiCard]):
     self.header = header
     self.cards = cards
@@ -914,7 +923,7 @@ class AnkiCard:
       str_list.append(field_value)
     return str_list
 
-  def write_as_tsv(self, w: SupportsWriteRow[str]) -> None:
+  def write_as_tsv(self, w: SupportsWriteRow) -> None:
     """Output data fields of AnkiCard in TSV format.
 
     Requires only a stream to improve reusability as a public API. See
