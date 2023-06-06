@@ -599,7 +599,7 @@ def parse_header_settings(f: ReadableAndSeekable[str],
 
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
-    field_names: SizedAppendableIterable[str] | None = None,
+    field_names: Iterable[str] | None = None,
 ) -> tuple[AnkiHeader, list[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
