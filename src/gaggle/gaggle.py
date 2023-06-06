@@ -458,7 +458,7 @@ def transform_integer_value(value: SupportsIndex,
 def transform_integer_value(value: _T,
                             translation: int = 0,
                             scale: int = 1,
-                            ) -> _T:
+                            ) -> _T | int:
   ...
 def transform_integer_value(value, translation=0, scale=1):
   """Attempt to convert value into an int(). If successful, translate the
@@ -495,7 +495,7 @@ def _copy_and_reformat(original: AnkiHeader,
 @overload
 def _copy_and_reformat(original: Mapping[str, _T],
                        direction: ReformatDirection,
-                       ) -> dict[str, _T | int] | dict[str, _T]:
+                       ) -> dict[str, _T | int] | dict[str, _T] | AnkiHeader:
   ...
 def _copy_and_reformat(original, direction):
   """Helper function to create a copy of a dictionary and format it as desired.
