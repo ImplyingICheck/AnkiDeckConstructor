@@ -731,8 +731,8 @@ def create_cards_from_tsv(f, field_names=None, header=None):
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
-    card = AnkiCard(card, field_names=field_names, **header)
-    deck.append(card)
+    anki_card = AnkiCard(card, field_names=field_names, **header)
+    deck.append(anki_card)
   return deck
 
 
