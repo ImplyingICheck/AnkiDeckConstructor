@@ -827,11 +827,11 @@ class AnkiCard:
                deck_idx=None,
                guid_idx=None):
     self.has_html = _parse_anki_header_bool(has_html)
-    self.field_names = _generate_field_names(field_names, len(fields))
+    field_names = _generate_field_names(field_names, len(fields))
     anki_header_names = {'Tags':tags_idx, 'Deck':deck_idx,
                          'Note Type':note_type_idx, 'GUID':guid_idx}
     self._overlay_anki_header_names(anki_header_names)
-    self.fields = _generate_field_dict(self.field_names, fields)
+    self.fields = _generate_field_dict(field_names, fields)
 
   @property
   def tags(self) -> str:
