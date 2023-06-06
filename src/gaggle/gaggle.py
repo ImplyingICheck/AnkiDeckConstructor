@@ -739,15 +739,16 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
 
 def _generate_field_names(field_names: Iterator[str] | None,
                           n_fields: int,
+                          reserved_names: Mapping[int, str],
                           ) -> Iterator[str]:
   """
 
   Args:
     field_names: The names which should be set for each delimited field in the
-    parsed file. Used for reference, does not modify read contents. Use '' to
-    apply a default field name. The length of field_names does not have to match
-    the length of the delimited fields. Missing names will be generated with a
-    default and extra names will be discarded.
+      parsed file. Used for reference, does not modify read contents. Use any
+      Falsy value to apply a default field name. The length of field_names does
+      not have to match the length of the delimited fields. Missing names will
+      be generated with a default and extra names will be discarded.
     n_fields: The number of fields contained in the AnkiCard.
 
   Returns:
@@ -763,8 +764,11 @@ def _generate_field_names(field_names: Iterator[str] | None,
                       f'Discarding remainder starting from {name}.',
                       stacklevel=2)
       return
-    name = name if name else f'Field{count}'
-    yield name
+    if reserved_name := reserved_names.get(count) is not None:
+      yield reserved_name
+    else:
+      name = name if name else f'Field{count}'
+      yield name
 
 
 def _generate_field_dict(field_names: Iterable[_T],
@@ -827,10 +831,16 @@ class AnkiCard:
                deck_idx=None,
                guid_idx=None):
     self.has_html = _parse_anki_header_bool(has_html)
-    field_names = _generate_field_names(field_names, len(fields))
-    anki_header_names = {'Tags':tags_idx, 'Deck':deck_idx,
-                         'Note Type':note_type_idx, 'GUID':guid_idx}
-    self._overlay_anki_header_names(anki_header_names)
+    property_names = ['Tags', 'Deck', 'Note Type', 'GUID']
+    property_indexes = [tags_idx, deck_idx, note_type_idx, guid_idx]
+    reserved_names = {
+      index: name
+      for index, name in zip(property_indexes, property_names, strict=True)
+      if index is not None
+    }
+    field_names = _generate_field_names(field_names, len(fields),
+                                        reserved_names)
+    self._overlay_anki_header_names(reserved_names)
     self.fields = _generate_field_dict(field_names, fields)
 
   @property
