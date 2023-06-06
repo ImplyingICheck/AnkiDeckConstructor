@@ -840,7 +840,6 @@ class AnkiCard:
     }
     field_names = _generate_field_names(field_names, len(fields),
                                         reserved_names)
-    self._overlay_anki_header_names(reserved_names)
     self.fields = _generate_field_dict(field_names, fields)
 
   @property
@@ -904,11 +903,6 @@ class AnkiCard:
 
   def __repr__(self):
     return str(self.fields)
-
-  def _overlay_anki_header_names(self, anki_header_names):
-    for name, field_idx in anki_header_names.items():
-      if field_idx is not None:
-        self.field_names[field_idx] = name
 
   def get_field(self, field_name):
     return self.fields[field_name]
