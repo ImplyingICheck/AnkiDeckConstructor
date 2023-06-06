@@ -19,6 +19,7 @@ from __future__ import annotations
 import collections
 import copy
 import csv
+import functools
 import os.path
 import itertools
 import operator
@@ -127,6 +128,30 @@ _DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
                         _ANKI_EXPORT_HEADER_MAPPING,
                       ReformatDirection.GAGGLE_TO_ANKI:
                         _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
+
+def propagate_warnings(stack_level):
+  def decorator(function):
+    @functools.wraps(function)
+    def capture_and_raise_warnings(*args, **kwargs):
+      with warnings.catch_warnings(record=True) as warning_context_manager:
+        return_value = function(*args, **kwargs)
+      for warning in warning_context_manager:
+        warnings.warn(warning.message, warning.category, stacklevel=stack_level)
+      return return_value
+    return capture_and_raise_warnings
+  return decorator
+
+def propagate_warnings_yield(stack_level):
+  def decorator(function):
+    @functools.wraps(function)
+    def capture_and_raise_warnings(*args, **kwargs):
+      with warnings.catch_warnings(record=True) as warning_context_manager:
+        yield from function(*args, **kwargs)
+      for warning in warning_context_manager:
+        warnings.warn(warning.message, warning.category, stacklevel=stack_level)
+    return capture_and_raise_warnings
+  return decorator
+
 
 def _initialise_decks(exported_file, field_names):
   """
@@ -736,7 +761,9 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
     deck.append(anki_card)
   return deck
 
-
+# Stack depth when resolving lazy evaluation in _generate_field_dict()
+_stack_levels_to_anki_card_init_call = 4
+@propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
 def _generate_field_names(field_names: Iterator[str],
                           fields: Iterator[_T],
                           reserved_names: Mapping[int, str],
@@ -759,8 +786,7 @@ def _generate_field_names(field_names: Iterator[str],
     if (_ := next(fields, None)) is None:
       if name is not None:
         warnings.warn(f'More field names passed in than fields exist. '
-                      f'Discarding remainder starting from: \'{name}\'.',
-                      stacklevel=2)
+                      f'Discarding remainder starting from: \'{name}\'.')
       return
     if (reserved_name := reserved_names.get(count)) is not None:
       yield reserved_name
