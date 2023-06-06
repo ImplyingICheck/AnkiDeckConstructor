@@ -23,6 +23,7 @@ import os.path
 import itertools
 import operator
 import enum
+import warnings
 from _csv import Dialect
 from typing import cast, overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
@@ -736,9 +737,9 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
   return deck
 
 
-def _generate_field_names(field_names: SizedAppendable[str],
+def _generate_field_names(field_names: Iterator[str] | None,
                           n_fields: int,
-                          ) -> SizedAppendable[str] | list[str]:
+                          ) -> Iterator[str]:
   """
 
   Args:
@@ -754,14 +755,16 @@ def _generate_field_names(field_names: SizedAppendable[str],
   """
   if field_names is None:
     field_names = []
-  if len(field_names) == n_fields:
-    return field_names
-  else:
-    range_start = len(field_names)
-    range_stop = n_fields
-    for idx in range(range_start, range_stop):
-      field_names.append(f'Field{idx}')
-    return field_names
+  for count in itertools.count():
+    name = next(field_names, None)
+    if count >= n_fields:
+      if name is not None:
+        warnings.warn(f'More field names passed in than fields exist. '
+                      f'Discarding remainder starting from {name}.',
+                      stacklevel=2)
+      return
+    name = name if name else f'Field{count}'
+    yield name
 
 
 def _generate_field_dict(field_names: Iterable[_T],
