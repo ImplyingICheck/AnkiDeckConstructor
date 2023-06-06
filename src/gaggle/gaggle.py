@@ -727,7 +727,7 @@ class AnkiDeck:
       card.write_as_tsv(w)
 
 
-def create_cards_from_tsv(f, field_names=None, header=None):
+def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
