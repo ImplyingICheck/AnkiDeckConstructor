@@ -838,9 +838,9 @@ class AnkiCard:
       for index, name in zip(property_indexes, property_names, strict=True)
       if index is not None
     }
-    field_names = _generate_field_names(field_names, len(fields),
+    field_names = _generate_field_names(iter(field_names), len(fields),
                                         reserved_names)
-    self.fields = _generate_field_dict(field_names, fields)
+    self.fields = _generate_field_dict(iter(field_names), iter(fields))
 
   @property
   def tags(self) -> str:
