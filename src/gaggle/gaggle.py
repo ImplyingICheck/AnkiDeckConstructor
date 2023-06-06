@@ -762,7 +762,7 @@ def _generate_field_names(field_names: Iterator[str],
                       f'Discarding remainder starting from {name}.',
                       stacklevel=2)
       return
-    if reserved_name := reserved_names.get(count) is not None:
+    if (reserved_name := reserved_names.get(count)) is not None:
       yield reserved_name
     else:
       name = name if name else f'Field{count}'
