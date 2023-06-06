@@ -769,8 +769,8 @@ def _generate_field_names(field_names: Iterator[str],
       yield name
 
 
-def _generate_field_dict(field_names: Iterable[_T],
-                         fields: Iterable[_S],
+def _generate_field_dict(field_names: Iterator[_T],
+                         fields: Iterator[_S],
                          ) -> collections.OrderedDict[_T, _S]:
   """Create a dictionary mapping given names to a value in AnkiCard.
 
