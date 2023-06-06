@@ -71,26 +71,22 @@ if TYPE_CHECKING:
     def writerow(self, row: Iterable[_T_co]) -> Any:
       ...
 
-  class SizedAppendableProtocol(Sized, SupportsAppend[_T_contra],
-                                Protocol[_T_contra]):
+  class SizedAppendable(Sized, SupportsAppend[_T_contra],
+                        Protocol[_T_contra]):
     ...
 
-  class SizedAppendableIterableProtocol(SizedAppendableProtocol[_T],
-                                        Iterable[_T], Protocol[_T]):
+  class SizedAppendableIterable(SizedAppendable[_T],
+                                Iterable[_T], Protocol[_T]):
     ...
 
-  class ReadableAndSeekableProtocol(SupportsRead[_T_co],
-                                    SupportsReadline[_T_co], Seekable,
-                                    Protocol[_T_co]):
+  class ReadableAndSeekable(SupportsRead[_T_co],
+                            SupportsReadline[_T_co], Seekable,
+                            Protocol[_T_co]):
     ...
 
-  RealNumber = TypeVar('RealNumber', bound=SupportsInt | SupportsTrunc)
-  SizedAppendable = TypeVar('SizedAppendable', bound=SizedAppendableProtocol)
-  SizedAppendableIterable = TypeVar('SizedAppendableIterable',
-                                    bound=SizedAppendableIterableProtocol)
-  ReadableAndSeekable = TypeVar('ReadableAndSeekable',
-                                bound=ReadableAndSeekableProtocol)
-  AnkiHeader = TypeVar('AnkiHeader', dict[str, str | int], dict[str, str])
+  RealNumber = SupportsInt | SupportsTrunc
+  # dict() is invariant so value type [str | int] and [str] must be declared
+  AnkiHeader = dict[str, str | int] | dict[str, str]
 
 _ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
@@ -548,7 +544,7 @@ def reformat_header_settings(header: dict[str, Any],
   header.update(reformatted_header)
 
 
-def read_header_settings(f: ReadableAndSeekable) -> AnkiHeader:
+def read_header_settings(f: ReadableAndSeekable[str]) -> AnkiHeader:
   """Reads in Anki Header from a stream and stores it into a dictionary. Strips
   all trailing whitespace characters from header value.
 
@@ -580,7 +576,7 @@ def read_header_settings(f: ReadableAndSeekable) -> AnkiHeader:
   return header
 
 
-def parse_header_settings(f: ReadableAndSeekable,
+def parse_header_settings(f: ReadableAndSeekable[str],
                           ) -> AnkiHeader:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
@@ -602,8 +598,8 @@ def parse_header_settings(f: ReadableAndSeekable,
 
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
-    field_names: SizedAppendableIterable | None = None,
-) -> tuple[AnkiHeader, Iterable[AnkiCard]]:
+    field_names: SizedAppendableIterable[str] | None = None,
+) -> tuple[AnkiHeader, list[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
@@ -740,9 +736,9 @@ def create_cards_from_tsv(f, field_names=None, header=None):
   return deck
 
 
-def _generate_field_names(field_names: SizedAppendable,
+def _generate_field_names(field_names: SizedAppendable[str],
                           n_fields: int,
-                          ) -> SizedAppendable | list:
+                          ) -> SizedAppendable[str] | list[str]:
   """
 
   Args:
