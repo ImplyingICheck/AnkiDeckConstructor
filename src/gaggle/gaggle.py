@@ -737,7 +737,7 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
   return deck
 
 
-def _generate_field_names(field_names: Iterator[str] | None,
+def _generate_field_names(field_names: Iterator[str],
                           n_fields: int,
                           reserved_names: Mapping[int, str],
                           ) -> Iterator[str]:
@@ -825,11 +825,13 @@ class AnkiCard:
   def __init__(self,
                fields,
                has_html: HeaderBoolean = HeaderBoolean.FALSE_,
-               tags_idx=None,
-               field_names=None,
-               note_type_idx=None,
-               deck_idx=None,
-               guid_idx=None):
+               tags_idx: int | None = None,
+               field_names: Iterable[str] | None = None,
+               note_type_idx: int | None = None,
+               deck_idx: int | None = None,
+               guid_idx: int | None = None):
+    if field_names is None:
+      field_names = ()
     self.has_html = _parse_anki_header_bool(has_html)
     property_names = ['Tags', 'Deck', 'Note Type', 'GUID']
     property_indexes = [tags_idx, deck_idx, note_type_idx, guid_idx]
