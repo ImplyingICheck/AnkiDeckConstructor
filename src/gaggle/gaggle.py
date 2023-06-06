@@ -754,8 +754,6 @@ def _generate_field_names(field_names: Iterator[str],
   Returns:
 
   """
-  if field_names is None:
-    field_names = []
   for count in itertools.count():
     name = next(field_names, None)
     if count >= n_fields:
