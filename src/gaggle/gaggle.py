@@ -901,7 +901,7 @@ class AnkiCard:
     return self.fields[field_name]
 
   def as_str_list(self) -> list[str]:
-    """Return data fields of AnkiCard. Preserves read in order.
+    """Return data fields of AnkiCard. Preserves read-in order.
 
     Returns:
       List of strings. Each string is an individual data value stored in
@@ -914,8 +914,7 @@ class AnkiCard:
 
     """
     str_list = []
-    for name in self.field_names:
-      field_value = self.get_field(name)
+    for field_value in self.fields.values():
       str_list.append(field_value)
     return str_list
 
