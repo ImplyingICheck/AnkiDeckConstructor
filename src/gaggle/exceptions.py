@@ -30,3 +30,7 @@ class DecksNotWrittenException(Exception):
     return (f'Failed to write all Decks to the file. '
             f'Last deck successfully written was the deck at: '
             f'Index {self.last_deck_written}')
+
+class DuplicateWarning(Warning):
+  """Gaggle warning when attempting to use duplicate values when unique values
+  are needed. Warning informs of what value was used as a replacement."""
