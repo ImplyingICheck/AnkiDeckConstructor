@@ -43,3 +43,6 @@ class DuplicateWarning(Warning):
   def _create_message(self, context_message):
     return (f'Duplicate {context_message} (replaced with: {self.replacement}): '
             f'{self.duplicate_value}')
+
+  def __str__(self):
+    return self.message
