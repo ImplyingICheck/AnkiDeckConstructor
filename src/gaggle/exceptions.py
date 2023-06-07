@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License along with
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
 """Definition of Gaggle exceptions. For internal use."""
+from typing import Any
+
 
 class DecksNotWrittenException(Exception):
   """Gaggle exception for failure to write all stored Decks to file. Can return
@@ -40,7 +42,16 @@ class DuplicateWarning(Warning):
     self.replacement_value = replacement_value
     self.message = self._create_message(context_message)
 
-  def _create_message(self, context_message):
+  def _create_message(self, context_message: Any) -> str:
+    """Creates value of DuplicateWarning.message
+
+    Args:
+      context_message: Extra information giving context, such as a name, to the
+      value which was duplicated. Used as f'Duplicate {context_message} ...'
+
+    Returns:
+      An f string explaining the type of duplication and the associated values
+    """
     return (f'Duplicate {context_message} (replaced with: '
             f'{self.replacement_value}): {self.duplicate_value}')
 
