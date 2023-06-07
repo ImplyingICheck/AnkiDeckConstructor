@@ -785,8 +785,8 @@ def _generate_field_names(field_names: Iterator[str],
     name = next(field_names, None)
     if next(fields, None) is None:
       if name is not None:
-        warnings.warn(f'More field names passed in than fields exist. '
-                      f'Discarding remainder starting from: \'{name}\'.')
+        warnings.warn(f'More field names than fields. The following field '
+                      f'names were not used: {name} {" ".join(field_names)}')
       return
     if (reserved_name := reserved_names.get(count)) is not None:
       yield reserved_name
