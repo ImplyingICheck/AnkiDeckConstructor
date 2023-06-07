@@ -32,5 +32,14 @@ class DecksNotWrittenException(Exception):
             f'Index {self.last_deck_written}')
 
 class DuplicateWarning(Warning):
-  """Gaggle warning when attempting to use duplicate values when unique values
-  are needed. Warning informs of what value was used as a replacement."""
+  """Gaggle warning when attempting to use a duplicate value when a unique value
+  is expected. However, a replacement value can be generated at run time.
+  Warning informs of the value used as a replacement."""
+  def __init__(self, context_message, duplicate_value, replacement):
+    self.message = self._create_message(context_message)
+    self.duplicate_value = duplicate_value
+    self.replacement = replacement
+
+  def _create_message(self, context_message):
+    return (f'Duplicate {context_message} (replaced with: {self.replacement}): '
+            f'{self.duplicate_value}')
