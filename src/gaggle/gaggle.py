@@ -784,7 +784,8 @@ def _generate_field_names(field_names: Iterator[str],
   """
   for count in itertools.count():
     name = next(field_names, None)
-    if next(fields, None) is None:
+    field_to_be_named = next(fields, None)
+    if field_to_be_named is None:
       if name is not None:
         warnings.warn(f'More field names than fields. The following field '
                       f'names were not used: {name} {" ".join(field_names)}')
