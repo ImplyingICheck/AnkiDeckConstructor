@@ -767,6 +767,7 @@ _stack_levels_to_anki_card_init_call = 4
 def _generate_field_names(field_names: Iterator[str],
                           fields: Iterator[_T],
                           reserved_names: Mapping[int, str],
+                          seen_names: set[str]
                           ) -> Iterator[str]:
   """
 
@@ -791,8 +792,17 @@ def _generate_field_names(field_names: Iterator[str],
     if (reserved_name := reserved_names.get(count)) is not None:
       yield reserved_name
     else:
-      name = name if name else f'Field{count}'
+      if name in seen_names:
+        warnings.warn(f'Duplicate field name (replaced with: Field{count}): '
+                      f'{name}')
+        name = None
+      if not name:
+        name = f'Field{count}'
+        if name in seen_names:
+          raise ValueError(f'Index-associated generic name duplicated. '
+                           f'Duplicated value: {name}')
       yield name
+      seen_names.add(name)
 
 
 def _generate_field_dict(field_names: Iterator[_T],
@@ -865,8 +875,9 @@ class AnkiCard:
                              strict=True)
       if index is not None
     }
+    reserved_name_set = set(AnkiCard._reserved_names)
     field_names = _generate_field_names(iter(field_names), iter(fields),
-                                        reserved_names)
+                                        reserved_names, reserved_name_set)
     self.fields = _generate_field_dict(iter(field_names), iter(fields))
 
   @property
