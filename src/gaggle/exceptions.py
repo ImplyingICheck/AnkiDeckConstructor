@@ -36,9 +36,9 @@ class DuplicateWarning(Warning):
   is expected. However, a replacement value can be generated at run time.
   Warning informs of the value used as a replacement."""
   def __init__(self, context_message, duplicate_value, replacement):
-    self.message = self._create_message(context_message)
     self.duplicate_value = duplicate_value
     self.replacement = replacement
+    self.message = self._create_message(context_message)
 
   def _create_message(self, context_message):
     return (f'Duplicate {context_message} (replaced with: {self.replacement}): '
