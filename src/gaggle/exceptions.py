@@ -35,14 +35,14 @@ class DuplicateWarning(Warning):
   """Gaggle warning when attempting to use a duplicate value when a unique value
   is expected. However, a replacement value can be generated at run time.
   Warning informs of the value used as a replacement."""
-  def __init__(self, context_message, duplicate_value, replacement):
+  def __init__(self, context_message, duplicate_value, replacement_value):
     self.duplicate_value = duplicate_value
-    self.replacement = replacement
+    self.replacement_value = replacement_value
     self.message = self._create_message(context_message)
 
   def _create_message(self, context_message):
-    return (f'Duplicate {context_message} (replaced with: {self.replacement}): '
-            f'{self.duplicate_value}')
+    return (f'Duplicate {context_message} (replaced with: '
+            f'{self.replacement_value}): {self.duplicate_value}')
 
   def __str__(self):
     return self.message
