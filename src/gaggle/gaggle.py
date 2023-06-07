@@ -846,6 +846,7 @@ class AnkiCard:
   Permanent Reference [09 May 2023]:
   https://github.com/ankitects/anki-manual/blob/0aa372146d10e299631e361769f41533a6d4a417/src/importing.md?plain=1#L196-L220
   """
+  _reserved_names = ['Tags', 'Deck', 'Note Type', 'GUID']
   def __init__(self,
                fields: Iterable[str],
                has_html: HeaderBoolean = HeaderBoolean.FALSE_,
@@ -857,11 +858,11 @@ class AnkiCard:
     if field_names is None:
       field_names = ()
     self.has_html = _parse_anki_header_bool(has_html)
-    property_names = ['Tags', 'Deck', 'Note Type', 'GUID']
     property_indexes = [tags_idx, deck_idx, note_type_idx, guid_idx]
     reserved_names = {
       index: name
-      for index, name in zip(property_indexes, property_names, strict=True)
+      for index, name in zip(property_indexes, AnkiCard._reserved_names,
+                             strict=True)
       if index is not None
     }
     field_names = _generate_field_names(iter(field_names), iter(fields),
