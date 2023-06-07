@@ -783,7 +783,7 @@ def _generate_field_names(field_names: Iterator[str],
   """
   for count in itertools.count():
     name = next(field_names, None)
-    if (_ := next(fields, None)) is None:
+    if next(fields, None) is None:
       if name is not None:
         warnings.warn(f'More field names passed in than fields exist. '
                       f'Discarding remainder starting from: \'{name}\'.')
