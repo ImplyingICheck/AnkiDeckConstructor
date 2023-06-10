@@ -632,7 +632,7 @@ def _parse_anki_export(
   Args:
     exported_file: A reference to a file exported by Anki
     field_names: The names to be used for referencing AnkiCard fields. See
-      _generate_field_names() for implementation details.
+      _generate_unique_field_names() for implementation details.
 
   Returns:
     A Tuple(header, cards). header is a dictionary mapping setting names to
@@ -679,7 +679,7 @@ class AnkiDeck:
       file: A string representing the file path of the information used to
       construct the deck.
       field_names: Strings representing the name of each field in each card. See
-      documentation for _generate_field_names() for details on usage and
+      documentation for _generate_unique_field_names() for details on usage and
       structure.
 
     Returns:
@@ -764,11 +764,11 @@ def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
 # Stack depth when resolving lazy evaluation in _generate_field_dict()
 _stack_levels_to_anki_card_init_call = 4
 @propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
-def _generate_field_names(field_names: Iterator[str],
-                          fields: Iterator[_T],
-                          reserved_names: Mapping[int, str],
-                          seen_names: set[str]
-                          ) -> Iterator[str]:
+def _generate_unique_field_names(field_names: Iterator[str],
+                                 fields: Iterator[_T],
+                                 reserved_names: Mapping[int, str],
+                                 seen_names: set[str]
+                                 ) -> Iterator[str]:
   """
 
   Args:
@@ -878,8 +878,9 @@ class AnkiCard:
       if index is not None
     }
     reserved_name_set = set(AnkiCard._reserved_names)
-    field_names = _generate_field_names(iter(field_names), iter(fields),
-                                        reserved_names, reserved_name_set)
+    field_names = _generate_unique_field_names(iter(field_names), iter(fields),
+                                               reserved_names,
+                                               reserved_name_set)
     self.fields = _generate_field_dict(iter(field_names), iter(fields))
 
   @property
