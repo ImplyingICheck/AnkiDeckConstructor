@@ -794,8 +794,9 @@ def _generate_field_names(field_names: Iterator[str],
       yield reserved_name
     else:
       if name in seen_names:
-        warnings.warn(f'Duplicate field name (replaced with: Field{count}): '
-                      f'{name}')
+        warnings.warn(exceptions.DuplicateWarning('field name',
+                                                  f'{name}',
+                                                  f'Field{count}'))
         name = None
       if not name:
         name = f'Field{count}'
