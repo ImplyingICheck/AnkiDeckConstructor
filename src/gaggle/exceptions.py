@@ -119,8 +119,29 @@ class LeftoverArgumentWarning(Warning):
     return cls.from_iterable(iterable=iterable, **kwargs)
 
   @classmethod
-  def from_values(cls, context_message, *values, leftover_name, delimiter=' '):
-      pass
+  def from_values(cls, *values: Iterable[Any], **kwargs: str) -> Self:
+    """Helper function of LeftoverArgumentWarning.from_iterable(). Creates a
+    chain of each value in values. This is equivalent to flattening each value
+    in values by one layer and combining the result into one iterable.
+
+    See LeftoverArgumentWarning.from_iterable() documentation for more detail.
+
+    Args:
+      *values: Iterables to be chained. Unpacked as separate arguments.
+      **kwargs: Keyword arguments as specified by
+        LeftoverArgumentWarning.from_iterable()
+
+    Examples:
+      >>> LeftoverArgumentWarning.from_values([1, 2, '3'], 'hi', ['32'], ...)
+      formats *values as an iterable where next() returns:
+
+      1 -> 2 -> '3' -> 'h' -> 'i' -> '32'
+
+    Returns:
+      A LeftoverArgumentWarning composed of passed arguments.
+    """
+    iterator = itertools.chain(*values)
+    return cls.from_iterator(iterator=iterator, **kwargs)
 
   def __init__(self, context_message, leftovers, leftover_name):
     self.leftovers = leftovers
