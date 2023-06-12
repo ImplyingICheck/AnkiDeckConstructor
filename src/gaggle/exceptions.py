@@ -161,5 +161,5 @@ class LeftoverArgumentWarning(Warning):
       A string formatted in style of LeftoverArgumentWarning. Can be grepped
       using ": " delimiter.
     """
-    return (f'LeftoverArgumentWarning: {context_message}. The following '
-            f'{leftover_name} were not used: {self.leftovers}')
+    return (f'{context_message}. The following {leftover_name} were not '
+            f'used: {self.leftovers}')
