@@ -154,7 +154,7 @@ class LeftoverArgumentWarning(Warning):
       context_message: Gives information on the parameter for which excess
       arguments were passed. Typically, singular "Excess usernames" or
       comparative "More usernames than users"
-      leftover_name: An informative name for the leftover values. Typically
+      leftover_name: An informative name for the leftover values. Typically,
       the name of the parameter.
 
     Returns:
