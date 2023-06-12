@@ -76,6 +76,9 @@ class LeftoverArgumentWarning(Warning):
     self.leftovers = leftovers
     self.message = self._create_message(context_message, leftover_name)
 
+  def __str__(self):
+    return self.message
+
   @classmethod
   def from_iterable(cls, context_message: str,
                     iterable: Iterable[Any],
