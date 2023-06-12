@@ -881,9 +881,9 @@ class AnkiCard:
   _reserved_names = ['Tags', 'Deck', 'Note Type', 'GUID']
   def __init__(self,
                fields: Iterable[str],
+               field_names: Iterable[str] | None = None,
                has_html: HeaderBoolean = HeaderBoolean.FALSE_,
                tags_idx: int | None = None,
-               field_names: Iterable[str] | None = None,
                note_type_idx: int | None = None,
                deck_idx: int | None = None,
                guid_idx: int | None = None):
