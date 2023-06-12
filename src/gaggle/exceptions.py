@@ -72,6 +72,10 @@ class DuplicateWarning(Warning):
 class LeftoverArgumentWarning(Warning):
   """Gaggle warning when extra arguments remain after a function call. The extra
   arguments were not necessary to successfully complete the function call."""
+  def __init__(self, context_message, leftovers, leftover_name):
+    self.leftovers = leftovers
+    self.message = self._create_message(context_message, leftover_name)
+
   @classmethod
   def from_iterable(cls, context_message: str,
                     iterable: Iterable[Any],
@@ -142,10 +146,6 @@ class LeftoverArgumentWarning(Warning):
     """
     iterator = itertools.chain(*values)
     return cls.from_iterator(iterator=iterator, **kwargs)
-
-  def __init__(self, context_message, leftovers, leftover_name):
-    self.leftovers = leftovers
-    self.message = self._create_message(context_message, leftover_name)
 
   def _create_message(self, context_message, leftover_name):
     """Creates value of LeftoverArgumentWarning.message
