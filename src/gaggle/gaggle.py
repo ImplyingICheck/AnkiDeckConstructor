@@ -16,54 +16,90 @@
 """Base class for collection, a class representing multiple Anki Decks."""
 from __future__ import annotations
 
+import collections
 import copy
 import csv
+import functools
 import os.path
 import itertools
 import operator
 import enum
-from typing import overload, Any, List, Protocol, Self, TypeVar, Dict, Tuple, TYPE_CHECKING, Union
-from collections.abc import Iterable, Iterator, Sized
+import warnings
+from _csv import Dialect
+from typing import cast, overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
 
 from gaggle import exceptions
-from gaggle import ankicard
 
 if TYPE_CHECKING:
   from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
-  class HasIndex(Protocol):
-    def __index__(self) -> int: ...
+  _T = TypeVar('_T')
+  _T_co = TypeVar('_T_co', covariant=True)
+  _T_contra = TypeVar('_T_contra', contravariant=True)
+  _S = TypeVar('_S')
 
-  class HasInt(Protocol):
-    def __int__(self) -> int: ...
+  class SupportsIndex(Protocol):
+    def __index__(self) -> int:
+      ...
 
-  class HasTruncate(Protocol):
-    def __trunc__(self) -> int: ...
+  class SupportsInt(Protocol):
+    def __int__(self) -> int:
+      ...
+
+  class SupportsTrunc(Protocol):
+    def __trunc__(self) -> int:
+      ...
 
   class Falsy(Protocol):
     def __bool__(self) -> bool:
       return False
 
-  class Appendable(Protocol):
-    def append(self, obj: Any) -> Any: ...
+  class SupportsAppend(Protocol[_T_contra]):
+    def append(self, obj: _T_contra) -> Any:
+      ...
 
   class Seekable(Protocol):
-    def tell(self) -> T: ...
-    def seek(self, position: T) -> Any: ...
+    def tell(self) -> Any:
+      ...
+    def seek(self, position: Any) -> Any:
+      ...
 
-  T = TypeVar('T')
-  S = TypeVar('S')
-  RealNumber = TypeVar('RealNumber', HasInt, HasTruncate)
-  SizedAppendableIterable = TypeVar('SizedAppendableIterable', Sized,
-                                    Appendable, Iterable)
-  ReadableAndSeekable = TypeVar('ReadableAndSeekable', SupportsRead,
-                                SupportsReadline, Seekable)
+  class SupportsWriteRow(Protocol):
+    @property
+    def dialect(self) -> Dialect:
+      ...
+
+    def writerow(self, row: Iterable[_T_co]) -> Any:
+      ...
+
+  class SizedAppendable(Sized, SupportsAppend[_T_contra],
+                        Protocol[_T_contra]):
+    ...
+
+  class SizedAppendableIterable(SizedAppendable[_T],
+                                Iterable[_T], Protocol[_T]):
+    ...
+
+  class ReadableAndSeekable(SupportsRead[_T_co],
+                            SupportsReadline[_T_co], Seekable,
+                            Protocol[_T_co]):
+    ...
+
+  RealNumber = SupportsInt | SupportsTrunc
+  # dict() is invariant so value type [str | int] and [str] must be declared
+  AnkiHeader = dict[str, str | int] | dict[str, str]
 
 _ANKI_EXPORT_HEADER_LINE_SYMBOL = '#'
 _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL = ':'
 _ANKI_EXPORT_ENCODING = 'utf-8'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME = 'separator'
 _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING = 'tab'
+class HeaderBoolean(enum.StrEnum):
+  FALSE_ = 'false'
+  TRUE_ = 'true'
+_ANKI_EXPORT_HEADER_TRUE = 'true'
+_ANKI_EXPORT_HEADER_FALSE = 'false'
 _ANKI_EXPORT_HEADER_MAPPING = {
   'html':'has_html',
   'tags column':'tags_idx',
@@ -93,14 +129,28 @@ _DIRECTION_MAPPING = {ReformatDirection.ANKI_TO_GAGGLE:
                       ReformatDirection.GAGGLE_TO_ANKI:
                         _ANKI_EXPORT_HEADER_MAPPING_REVERSE}
 
-# TODO: Move to class declaration of AnkiCard after refactor
-def create_cards_from_tsv(f, field_names=None, header=None):
-  cards = csv.reader(f, dialect='excel-tab')
-  deck = []
-  for card in cards:
-    card = ankicard.AnkiCard(card, field_names=field_names, **header)
-    deck.append(card)
-  return deck
+def propagate_warnings(stack_level):
+  def decorator(function):
+    @functools.wraps(function)
+    def capture_and_raise_warnings(*args, **kwargs):
+      with warnings.catch_warnings(record=True) as warning_context_manager:
+        return_value = function(*args, **kwargs)
+      for warning in warning_context_manager:
+        warnings.warn(warning.message, warning.category, stacklevel=stack_level)
+      return return_value
+    return capture_and_raise_warnings
+  return decorator
+
+def propagate_warnings_yield(stack_level):
+  def decorator(function):
+    @functools.wraps(function)
+    def capture_and_raise_warnings(*args, **kwargs):
+      with warnings.catch_warnings(record=True) as warning_context_manager:
+        yield from function(*args, **kwargs)
+      for warning in warning_context_manager:
+        warnings.warn(warning.message, warning.category, stacklevel=stack_level)
+    return capture_and_raise_warnings
+  return decorator
 
 
 def _initialise_decks(exported_file, field_names):
@@ -173,7 +223,8 @@ def generate_flattened_kwargs_fill_missing(fillvalue: Any = None,
      'param_y_keyword': object(),
      'param_z_keyword': argument_z5}
     """
-  keyword_argument_mappings = map(zip,
+  cast_zip = cast(Callable, zip)
+  keyword_argument_mappings = map(cast_zip,
                                   itertools.repeat(kwargs),
                                   itertools.zip_longest(*kwargs.values(),
                                                         fillvalue=fillvalue))
@@ -210,10 +261,12 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   """
   arguments = itertools.zip_longest(*kwargs.values())
   arguments, falsy_filter = itertools.tee(arguments)
-  keyword_argument_pairs = map(zip,
+  cast_zip = cast(Callable, zip)
+  keyword_argument_pairs = map(cast_zip,
                                itertools.repeat(kwargs),
                                arguments)
-  filtered_pairs = map(itertools.compress,
+  cast_compress = cast(Callable, itertools.compress)
+  filtered_pairs = map(cast_compress,
                        keyword_argument_pairs,
                        falsy_filter)
   for flat_kwargs in filtered_pairs:
@@ -260,13 +313,15 @@ def generate_flattened_kwargs_remove_sentinel(sentinel: Any = None,
       """
   arguments = itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue)
   arguments, sentinel_filter = itertools.tee(arguments)
-  keyword_argument_pairs = map(zip,
+  cast_zip = cast(Callable, zip)
+  keyword_argument_pairs = map(cast_zip,
                                itertools.repeat(kwargs),
                                arguments)
   sentinel_filter = map(operator.ne,
                         itertools.chain.from_iterable(sentinel_filter),
                         itertools.repeat(sentinel))
-  filtered_keyword_argument_pairs = map(itertools.compress,
+  cast_compress = cast(Callable, itertools.compress)
+  filtered_keyword_argument_pairs = map(cast_compress,
                                         keyword_argument_pairs,
                                         itertools.repeat(sentinel_filter))
   for flat_kwargs in filtered_keyword_argument_pairs:
@@ -385,7 +440,7 @@ class Gaggle:
     if last_written_deck_idx != self._get_num_decks() - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> List[AnkiDeck]:
+  def _get_decks(self) -> list[AnkiDeck]:
     """Getter for list containing Deck objects in Gaggle
 
     Returns:
@@ -410,22 +465,22 @@ class Gaggle:
 
 
 @overload
-def transform_integer_value(value: T,
-                            translation: int = 0,
-                            scale: int = 1,
-                            ) -> T:
-  ...
-@overload
-def transform_integer_value(value: HasIndex,
-                            translation: int = 0,
-                            scale: int = 1,
-                            ) -> HasIndex | int:
-  ...
-@overload
 def transform_integer_value(value: RealNumber,
                             translation: int = 0,
                             scale: int = 1,
                             ) -> int:
+  ...
+@overload
+def transform_integer_value(value: SupportsIndex,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> SupportsIndex | int:
+  ...
+@overload
+def transform_integer_value(value: _T,
+                            translation: int = 0,
+                            scale: int = 1,
+                            ) -> _T | int:
   ...
 def transform_integer_value(value, translation=0, scale=1):
   """Attempt to convert value into an int(). If successful, translate the
@@ -454,9 +509,17 @@ def transform_integer_value(value, translation=0, scale=1):
     return transformed_value
 
 
-def _copy_and_reformat(original: Dict[str, T],
+@overload
+def _copy_and_reformat(original: AnkiHeader,
                        direction: ReformatDirection,
-                       ) -> Dict[str, Union[T | int]]:
+                       ) -> AnkiHeader:
+  ...
+@overload
+def _copy_and_reformat(original: Mapping[str, _T],
+                       direction: ReformatDirection,
+                       ) -> dict[str, _T | int] | dict[str, _T] | AnkiHeader:
+  ...
+def _copy_and_reformat(original, direction):
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
@@ -468,11 +531,12 @@ def _copy_and_reformat(original: Dict[str, T],
     A deep copy of the original dictionary, reformatted as specified.
   """
   deep_copy = copy.deepcopy(original)
+  deep_copy = cast(dict[str, Any], deep_copy)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
 
-def reformat_header_settings(header: Dict[str, Any],
+def reformat_header_settings(header: dict[str, Any],
                              direction: ReformatDirection,
                              ) -> None:
   """Convert between Anki header naming style and Gaggle header naming style.
@@ -506,7 +570,7 @@ def reformat_header_settings(header: Dict[str, Any],
   header.update(reformatted_header)
 
 
-def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
+def read_header_settings(f: ReadableAndSeekable[str]) -> AnkiHeader:
   """Reads in Anki Header from a stream and stores it into a dictionary. Strips
   all trailing whitespace characters from header value.
 
@@ -531,14 +595,15 @@ def read_header_settings(f: ReadableAndSeekable) -> Dict[str, str]:
     line = f.readline()
     setting, value = line.split(header_separator)
     value = value.rstrip()
+    value = transform_integer_value(value)
     header[setting] = value
     reader_pos = f.tell()
   f.seek(reader_pos)
   return header
 
 
-def parse_header_settings(f: ReadableAndSeekable,
-                          ) -> Dict[str, Union[str | int]]:
+def parse_header_settings(f: ReadableAndSeekable[str],
+                          ) -> AnkiHeader:
   """Reads in all Anki file header settings, producing a mapping of setting
   name to setting value. Then reformats this mapping and returns it.
 
@@ -559,15 +624,15 @@ def parse_header_settings(f: ReadableAndSeekable,
 
 def _parse_anki_export(
     exported_file: StrOrBytesPath,
-    field_names: SizedAppendableIterable | None = None,
-) -> Tuple[Dict[str, Union[str | int]], Iterable[ankicard.AnkiCard]]:
+    field_names: Iterable[str] | None = None,
+) -> tuple[AnkiHeader, list[AnkiCard]]:
   """Reads in a file exported from Anki. Determines file type through the header
   then parses all data accompanying the header using the header settings.
 
   Args:
     exported_file: A reference to a file exported by Anki
     field_names: The names to be used for referencing AnkiCard fields. See
-      _generate_field_names() for implementation details.
+      _generate_unique_field_names() for implementation details.
 
   Returns:
     A Tuple(header, cards). header is a dictionary mapping setting names to
@@ -601,8 +666,8 @@ class AnkiDeck:
     cards: An iterable of gaggle.AnkiCards
   """
   def __init__(self,
-               header: dict[str, Union[str | int]],
-               cards: Iterable[ankicard.AnkiCard]):
+               header: AnkiHeader,
+               cards: Iterable[AnkiCard]):
     self.header = header
     self.cards = cards
 
@@ -614,7 +679,7 @@ class AnkiDeck:
       file: A string representing the file path of the information used to
       construct the deck.
       field_names: Strings representing the name of each field in each card. See
-      documentation for _generate_field_names() for details on usage and
+      documentation for _generate_unique_field_names() for details on usage and
       structure.
 
     Returns:
@@ -686,3 +751,266 @@ class AnkiDeck:
     w = csv.writer(f, dialect='excel-tab')
     for card in self.cards:
       card.write_as_tsv(w)
+
+
+def create_cards_from_tsv(f: Iterable[str],
+                          field_names: Iterable[str] | None = None,
+                          header: AnkiHeader | None = None,
+                          ) -> list[AnkiCard]:
+  """Breaks each entry of f using Excel TSV style rules. Then constructs an
+  AnkiCard from the delimited strings.
+
+  Args:
+    f: Typically a stream from builtin open()
+    field_names: The names to be used for each field per entry in f. Used for
+    reference only. See documentation for _generate_unique_field_names() for
+    more information.
+    header: The settings with which to initialise each AnkiCard.
+
+  Returns:
+    A list of AnkiCards. Useful for constructing an AnkiDeck.
+  """
+  cards = csv.reader(f, dialect='excel-tab')
+  deck = []
+  for card in cards:
+    anki_card = AnkiCard(card, field_names=field_names, **header)
+    deck.append(anki_card)
+  return deck
+
+# Stack depth when resolving lazy evaluation in _generate_field_dict()
+_stack_levels_to_anki_card_init_call = 4
+@propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
+def _generate_unique_field_names(field_names: Iterator[str],
+                                 fields: Iterator[_T],
+                                 reserved_names: Mapping[int, str],
+                                 seen_names: set[str]
+                                 ) -> Iterator[str]:
+  """Generator for field names; prevents duplicate names from being returned.
+
+  When a field name is omitted, Generic name 'Field{idx}' is assigned. idx
+  begins at 0 and corresponds to read-in order of field values.
+
+  The length of field_names is not required to match the length of fields.
+  Missing names will be generated with a default and extra names will be
+  discarded.
+
+  Args:
+    field_names: The names which should be set for each delimited field in the
+      parsed file. Used for reference, does not modify read contents. Use any
+      Falsy value to apply a default field name.
+    fields: The fields to be named. Used as a reference for length, not
+      modified. Iterator is exhausted.
+    reserved_names: Names
+    seen_names:
+
+  Yields:
+    Unique values from field_names
+
+  Raises:
+    ValueError: If an index-bound generic name is duplicated and least two
+    duplicates are not specified in reserved_names
+    DuplicateWarning: Raised in two situations. If field_names contains a name
+    specified by reserved_names. If field_names contains a duplicate value.
+    LeftoverArgumentWarning: If field_names contains more values than fields
+  """
+  for count in itertools.count():
+    name = next(field_names, None)
+    field_to_be_named = next(fields, None)
+    if field_to_be_named is None:
+      if name is not None:
+        warnings.warn(
+          exceptions.LeftoverArgumentWarning.from_values(
+            [name], field_names,
+            context_message='More field names than fields',
+            leftover_name='field names'
+          )
+        )
+      return
+    if (reserved_name := reserved_names.get(count)) is not None:
+      yield reserved_name
+    else:
+      if name in seen_names:
+        warnings.warn(exceptions.DuplicateWarning('field name',
+                                                  f'{name}',
+                                                  f'Field{count}'))
+        name = None
+      if not name:
+        name = f'Field{count}'
+        if name in seen_names:
+          raise ValueError(f'Index-associated generic name duplicated. '
+                           f'Duplicated value: {name}')
+      yield name
+      seen_names.add(name)
+
+
+def _generate_field_dict(field_names: Iterator[_T],
+                         fields: Iterator[_S],
+                         ) -> collections.OrderedDict[_T, _S]:
+  """Create a dictionary mapping given names to a value in AnkiCard.
+
+  Args:
+    field_names: Names used for referencing values stored in the field dict.
+    Special properties exist for fields named by the header.
+    Must match the length of fields.
+    fields: The values to be stored in an AnkiCard.
+
+  Returns:
+    Named values whose iteration order is the same as read from file.
+  """
+  name_field_tuples = zip(field_names, fields, strict=True)
+  return collections.OrderedDict(name_field_tuples)
+
+
+def _parse_anki_header_bool(bool_as_str: HeaderBoolean) -> bool:
+  """Translate boolean notation from Anki generated file header to Python
+  bool type.
+
+  Args:
+    bool_as_str: The string representation of a boolean value as used internally
+    by Anki
+
+  Returns:
+    True or False depending on value parsed from the AnkiHeader.
+
+  Raises:
+    ValueError: If bool_as_str is not the representation for True or False used
+    by Anki
+  """
+  if bool_as_str == HeaderBoolean.TRUE_:
+    return True
+  elif bool_as_str == HeaderBoolean.FALSE_:
+    return False
+  else:
+    raise ValueError(f'Expected {HeaderBoolean.TRUE_} or '
+                     f'{HeaderBoolean.FALSE_} but instead got '
+                     f'{bool_as_str}')
+
+
+class AnkiCard:
+  """
+  Anki Card fields as denoted by Anki documentation
+  Up to date reference:
+  https://docs.ankiweb.net/importing.html#file-headers
+  Permanent Reference [09 May 2023]:
+  https://github.com/ankitects/anki-manual/blob/0aa372146d10e299631e361769f41533a6d4a417/src/importing.md?plain=1#L196-L220
+  """
+  _reserved_names = ['Tags', 'Deck', 'Note Type', 'GUID']
+  def __init__(self,
+               fields: Iterable[str],
+               field_names: Iterable[str] | None = None,
+               has_html: HeaderBoolean = HeaderBoolean.FALSE_,
+               tags_idx: int | None = None,
+               note_type_idx: int | None = None,
+               deck_idx: int | None = None,
+               guid_idx: int | None = None):
+    if field_names is None:
+      field_names = ()
+    self.has_html = _parse_anki_header_bool(has_html)
+    property_indexes = [tags_idx, deck_idx, note_type_idx, guid_idx]
+    reserved_names = {
+      index: name
+      for index, name in zip(property_indexes, AnkiCard._reserved_names,
+                             strict=True)
+      if index is not None
+    }
+    reserved_name_set = set(AnkiCard._reserved_names)
+    field_names = _generate_unique_field_names(iter(field_names), iter(fields),
+                                               reserved_names,
+                                               reserved_name_set)
+    self.fields = _generate_field_dict(iter(field_names), iter(fields))
+
+  @property
+  def tags(self) -> str:
+    """This property is a reserved name, a field cannot be manually named
+    Note Type. It must be set using the tags_idx parameter of AnkiCard.
+
+    Returns:
+      Anki program tags, delimited with '::' when generated by Anki
+
+    Raises:
+      KeyError: If no field with the name 'Tags' exists
+    """
+    return self.get_field('Tags')
+
+  @property
+  def note_type(self) -> str:
+    """This property is a reserved name, a field cannot be manually named
+    Note Type. It must be set using the note_type_idx parameter of AnkiCard.
+
+    Returns:
+      Anki program note type. This name reflects the expected fields and
+      css/html within the Anki program.
+
+    Raises:
+      KeyError: If no field with the name 'Note Type' exists
+    """
+    return self.get_field('Note Type')
+
+  @property
+  def deck_name(self) -> str:
+    """This property is a reserved name, a field cannot be manually named
+    Deck. It must be set using the deck_idx parameter of AnkiCard.
+
+    Returns:
+      Anki program deck name, delimited with '::' when generated by Anki.
+      This reflects the nested structure of decks saved within the Anki program,
+      where the outer layer is ordered first. For example:
+
+      'First Grouping::First Subgroup::Deck 3'
+
+    Raises:
+      KeyError: If no field with the name 'Deck' exists
+    """
+    return self.get_field('Deck')
+
+  @property
+  def guid(self) -> str:
+    """This property is a reserved name, a field cannot be manually named
+    GUID. It must be set using the guid_idx parameter of AnkiCard.
+
+    Returns:
+      A GUID used internally by the Anki program. It is used to update existing
+      cards should a card with a matching GUID be imported. Per Anki
+      documentation, it is not recommended to manually set this value yourself.
+
+    Raises:
+      KeyError: If no field with the name 'GUID' exists
+    """
+    return self.get_field('GUID')
+
+  def __repr__(self):
+    return str(self.fields)
+
+  def get_field(self, field_name):
+    return self.fields[field_name]
+
+  def as_str_list(self) -> list[str]:
+    """Return data fields of AnkiCard. Preserves read-in order.
+
+    Returns:
+      List of strings. Each string is an individual data value stored in
+      AnkiCard. The order of the strings is the same order as the AnkiCard was
+      read from file.
+
+      Assume a file with three values was read. For example:
+
+      [column0, column1, column2]
+
+    """
+    str_list = []
+    for field_value in self.fields.values():
+      str_list.append(field_value)
+    return str_list
+
+  def write_as_tsv(self, w: SupportsWriteRow) -> None:
+    """Output data fields of AnkiCard in TSV format.
+
+    Requires only a stream to improve reusability as a public API. See
+    AnkiDeck.write_as_tsv() for a simpler setup.
+
+    Args:
+      w: The stream to write to. Must have internal formatting data.
+        See AnkiDeck.write_as_tsv() for an example using csv.writer.
+    """
+    content = self.as_str_list()
+    w.writerow(content)
