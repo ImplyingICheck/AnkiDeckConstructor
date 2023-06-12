@@ -753,7 +753,23 @@ class AnkiDeck:
       card.write_as_tsv(w)
 
 
-def create_cards_from_tsv(f, field_names=None, header=None) -> list[AnkiCard]:
+def create_cards_from_tsv(f: Iterable[str],
+                          field_names: Iterable[str] | None = None,
+                          header: AnkiHeader | None = None,
+                          ) -> list[AnkiCard]:
+  """Breaks each entry of f using Excel TSV style rules. Then constructs an
+  AnkiCard from the delimited strings.
+
+  Args:
+    f: Typically a stream from builtin open()
+    field_names: The names to be used for each field per entry in f. Used for
+    reference only. See documentation for _generate_unique_field_names() for
+    more information.
+    header: The settings with which to initialise each AnkiCard.
+
+  Returns:
+    A list of AnkiCards. Useful for constructing an AnkiDeck.
+  """
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
