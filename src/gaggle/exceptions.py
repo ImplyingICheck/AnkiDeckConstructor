@@ -148,4 +148,18 @@ class LeftoverArgumentWarning(Warning):
     self.message = self._create_message(context_message, leftover_name)
 
   def _create_message(self, context_message, leftover_name):
-    pass
+    """Creates value of LeftoverArgumentWarning.message
+
+    Args:
+      context_message: Gives information on the parameter for which excess
+      arguments were passed. Typically, singular "Excess usernames" or
+      comparative "More usernames than users"
+      leftover_name: An informative name for the leftover values. Typically
+      the name of the parameter.
+
+    Returns:
+      A string formatted in style of LeftoverArgumentWarning. Can be grepped
+      using ": " delimiter.
+    """
+    return (f'LeftoverArgumentWarning: {context_message}. The following '
+            f'{leftover_name} were not used: {self.leftovers}')
