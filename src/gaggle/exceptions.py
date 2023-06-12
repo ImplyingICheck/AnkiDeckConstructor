@@ -15,6 +15,7 @@
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
 """Definition of Gaggle exceptions. For internal use."""
 import itertools
+from collections.abc import Iterable
 from typing import Any, Self
 
 
@@ -72,9 +73,30 @@ class LeftoverArgumentWarning(Warning):
   """Gaggle warning when extra arguments remain after a function call. The extra
   arguments were not necessary to successfully complete the function call."""
   @classmethod
-  def from_iterable(cls, context_message, iterable, leftover_name,
-                    delimiter=' ') -> Self:
-    pass
+  def from_iterable(cls, context_message: str,
+                    iterable: Iterable[Any],
+                    leftover_name: str,
+                    delimiter: str = ' ',
+                    ) -> Self:
+    """Formats an iterable to be used in LeftoverArgumentWarning. The values of
+    iterable are recommended to have defined __str__() formats.
+
+    For information on how the context_message, iterable, and leftover_name are
+    used, see documentation for LeftoverArgumentWarning._create_message().
+
+    Args:
+      context_message: Gives information on the parameter for which excess
+      arguments were passed.
+      iterable: Each value is cast into a string and joined using delimiter.
+      leftover_name: An informative name. Output stream facing.
+      delimiter: The delimiter by which all values in iterable are joined into
+      one string.
+
+    Returns:
+      A LeftoverArgumentWarning composed of passed arguments.
+    """
+    delimited_leftovers = delimiter.join([str(value) for value in iterable])
+    return cls(context_message, delimited_leftovers, leftover_name)
 
   @classmethod
   def from_iterator(cls, context_message, iterator, leftover_name,
