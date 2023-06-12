@@ -787,8 +787,13 @@ def _generate_unique_field_names(field_names: Iterator[str],
     field_to_be_named = next(fields, None)
     if field_to_be_named is None:
       if name is not None:
-        warnings.warn(f'More field names than fields. The following field '
-                      f'names were not used: {name} {" ".join(field_names)}')
+        warnings.warn(
+          exceptions.LeftoverArgumentWarning.from_values(
+            [name], field_names,
+            context_message='More field names than fields',
+            leftover_name='field names'
+          )
+        )
       return
     if (reserved_name := reserved_names.get(count)) is not None:
       yield reserved_name
