@@ -15,7 +15,7 @@
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
 """Definition of Gaggle exceptions. For internal use."""
 import itertools
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, Self
 
 
@@ -99,9 +99,24 @@ class LeftoverArgumentWarning(Warning):
     return cls(context_message, delimited_leftovers, leftover_name)
 
   @classmethod
-  def from_iterator(cls, context_message, iterator, leftover_name,
-                    delimiter=' '):
-    pass
+  def from_iterator(cls, iterator: Iterator[Any], **kwargs: str) -> Self:
+    """Warning, this function exhausts the iterator.
+
+    Helper function of LeftoverArgumentWarning.from_iterable(). Formats
+    iterator as an iterable.
+
+    See LeftoverArgumentWarning.from_iterable() documentation for more detail.
+
+    Args:
+      iterator: An iterator processed into a list. Exhausted.
+      kwargs: Keyword arguments as specified by
+        LeftoverArgumentWarning.from_iterable()
+
+    Returns:
+      A LeftoverArgumentWarning composed of passed arguments.
+    """
+    iterable = list(iterator)
+    return cls.from_iterable(iterable=iterable, **kwargs)
 
   @classmethod
   def from_values(cls, context_message, *values, leftover_name, delimiter=' '):
