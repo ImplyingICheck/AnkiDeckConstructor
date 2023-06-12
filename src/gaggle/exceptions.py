@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License along with
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
 """Definition of Gaggle exceptions. For internal use."""
-from typing import Any
+import itertools
+from typing import Any, Self
 
 
 class DecksNotWrittenException(Exception):
@@ -66,3 +67,27 @@ class DuplicateWarning(Warning):
 
   def __str__(self):
     return self.message
+
+class LeftoverArgumentWarning(Warning):
+  """Gaggle warning when extra arguments remain after a function call. The extra
+  arguments were not necessary to successfully complete the function call."""
+  @classmethod
+  def from_iterable(cls, context_message, iterable, leftover_name,
+                    delimiter=' ') -> Self:
+    pass
+
+  @classmethod
+  def from_iterator(cls, context_message, iterator, leftover_name,
+                    delimiter=' '):
+    pass
+
+  @classmethod
+  def from_values(cls, context_message, *values, leftover_name, delimiter=' '):
+      pass
+
+  def __init__(self, context_message, leftovers, leftover_name):
+    self.leftovers = leftovers
+    self.message = self._create_message(context_message, leftover_name)
+
+  def _create_message(self, context_message, leftover_name):
+    pass
