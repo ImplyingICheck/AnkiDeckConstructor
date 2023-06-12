@@ -769,18 +769,33 @@ def _generate_unique_field_names(field_names: Iterator[str],
                                  reserved_names: Mapping[int, str],
                                  seen_names: set[str]
                                  ) -> Iterator[str]:
-  """
+  """Generator for field names; prevents duplicate names from being returned.
+
+  When a field name is omitted, Generic name 'Field{idx}' is assigned. idx
+  begins at 0 and corresponds to read-in order of field values.
+
+  The length of field_names is not required to match the length of fields.
+  Missing names will be generated with a default and extra names will be
+  discarded.
 
   Args:
     field_names: The names which should be set for each delimited field in the
       parsed file. Used for reference, does not modify read contents. Use any
-      Falsy value to apply a default field name. The length of field_names does
-      not have to match the length of the delimited fields. Missing names will
-      be generated with a default and extra names will be discarded.
-    n_fields: The number of fields contained in the AnkiCard.
+      Falsy value to apply a default field name.
+    fields: The fields to be named. Used as a reference for length, not
+      modified. Iterator is exhausted.
+    reserved_names: Names
+    seen_names:
 
-  Returns:
+  Yields:
+    Unique values from field_names
 
+  Raises:
+    ValueError: If an index-bound generic name is duplicated and least two
+    duplicates are not specified in reserved_names
+    DuplicateWarning: Raised in two situations. If field_names contains a name
+    specified by reserved_names. If field_names contains a duplicate value.
+    LeftoverArgumentWarning: If field_names contains more values than fields
   """
   for count in itertools.count():
     name = next(field_names, None)
