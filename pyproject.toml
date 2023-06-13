@@ -41,6 +41,12 @@ ignore_patterns = [
 [tool.yapf]
 based_on_style = "yapf"
 
+[tool.pyright]
+include = ["src"]
+exclude = ["dev_files/*.py"]
+strict = ["src/gaggle"]
+reportMissingImports = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
