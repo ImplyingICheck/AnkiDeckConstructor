@@ -66,10 +66,10 @@ if TYPE_CHECKING:
 
   class Seekable(Protocol):
 
-    def tell(self) -> Any:
+    def tell(self) -> int:
       ...
 
-    def seek(self, position: Any) -> Any:
+    def seek(self, __cookie: int, __whence: int = 0) -> int:  # pylint: disable=invalid-name
       ...
 
   class SupportsWriteRow(Protocol):
