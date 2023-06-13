@@ -816,6 +816,8 @@ def create_cards_from_tsv(
   Returns:
     A list of AnkiCards. Useful for constructing an AnkiDeck.
   """
+  if header is None:
+    header = {}
   cards = csv.reader(f, dialect='excel-tab')
   deck = []
   for card in cards:
