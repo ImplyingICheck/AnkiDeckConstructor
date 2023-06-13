@@ -210,6 +210,17 @@ pluggy = ">=0.12,<2.0"
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
 
 [[package]]
+name = "tomli"
+version = "2.0.1"
+description = "A lil' TOML parser"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
+    {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
 name = "tomlkit"
 version = "0.11.8"
 description = "Style preserving TOML library"
@@ -304,7 +315,21 @@ files = [
     {file = "wrapt-1.15.0.tar.gz", hash = "sha256:d06730c6aed78cee4126234cf2d071e01b44b915e725a6cb439a879ec9754a3a"},
 ]
 
+[[package]]
+name = "yapf"
+version = "0.33.0"
+description = "A formatter for Python code."
+optional = false
+python-versions = "*"
+files = [
+    {file = "yapf-0.33.0-py2.py3-none-any.whl", hash = "sha256:4c2b59bd5ffe46f3a7da48df87596877189148226ce267c16e8b44240e51578d"},
+    {file = "yapf-0.33.0.tar.gz", hash = "sha256:da62bdfea3df3673553351e6246abed26d9fe6780e548a5af9e70f6d2b4f5b9a"},
+]
+
+[package.dependencies]
+tomli = ">=2.0.1"
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "bf961bbdd90c506c2048c1e7493c013434938bb8bd2ddfe9d260fdae5462b444"
+content-hash = "fd5bf352bbeaa56ff2d2af756d8f135fb664ae79b6c4167bb05385fe1b61550c"

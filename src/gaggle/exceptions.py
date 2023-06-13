@@ -22,6 +22,7 @@ from typing import Any, Self
 class DecksNotWrittenException(Exception):
   """Gaggle exception for failure to write all stored Decks to file. Can return
   the last successfully written deck"""
+
   def __init__(self, last_deck_written: int | None = None):
     """
     Args:
@@ -35,10 +36,12 @@ class DecksNotWrittenException(Exception):
             f'Last deck successfully written was the deck at: '
             f'Index {self.last_deck_written}')
 
+
 class DuplicateWarning(Warning):
   """Gaggle warning when attempting to use a duplicate value when a unique value
   is expected. However, a replacement value can be generated at run time.
   Warning informs of the value used as a replacement."""
+
   def __init__(self, context_message: Any, duplicate_value: Any,
                replacement_value: Any):
     """
@@ -69,9 +72,11 @@ class DuplicateWarning(Warning):
   def __str__(self):
     return self.message
 
+
 class LeftoverArgumentWarning(Warning):
   """Gaggle warning when extra arguments remain after a function call. The extra
   arguments were not necessary to successfully complete the function call."""
+
   def __init__(self, context_message, leftovers, leftover_name):
     self.leftovers = leftovers
     self.message = self._create_message(context_message, leftover_name)
@@ -80,11 +85,13 @@ class LeftoverArgumentWarning(Warning):
     return self.message
 
   @classmethod
-  def from_iterable(cls, context_message: str,
-                    iterable: Iterable[Any],
-                    leftover_name: str,
-                    delimiter: str = ' ',
-                    ) -> Self:
+  def from_iterable(
+      cls,
+      context_message: str,
+      iterable: Iterable[Any],
+      leftover_name: str,
+      delimiter: str = ' ',
+  ) -> Self:
     """Formats an iterable to be used in LeftoverArgumentWarning. The values of
     iterable are recommended to have defined __str__() formats.
 
