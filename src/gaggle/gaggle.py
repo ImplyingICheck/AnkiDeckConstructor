@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     def dialect(self) -> Dialect:
       ...
 
-    def writerow(self, row: Iterable[_T_co]) -> Any:
+    def writerow(self, row: Iterable) -> Any:
       ...
 
   class SizedAppendable(Sized, SupportsAppend[_T_contra], Protocol[_T_contra]):
@@ -832,7 +832,7 @@ _stack_levels_to_anki_card_init_call = 4
 
 @propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
 def _generate_unique_field_names(field_names: Iterator[str],
-                                 fields: Iterator[_T],
+                                 fields: Iterator[Any],
                                  reserved_names: Mapping[int, str],
                                  seen_names: set[str]) -> Iterator[str]:
   """Generator for field names; prevents duplicate names from being returned.
