@@ -15,7 +15,7 @@
       <excludePattern pattern="README.md" />
       <excludePattern pattern="LICENSE" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (Gaggle)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">
