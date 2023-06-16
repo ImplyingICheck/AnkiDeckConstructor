@@ -26,8 +26,8 @@ import operator
 import enum
 import warnings
 from _csv import Dialect
-from typing import cast, overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
+from typing import overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
+from collections.abc import Iterable, Iterator, Mapping, Sized
 
 from gaggle import exceptions
 
@@ -250,9 +250,8 @@ def generate_flattened_kwargs_fill_missing(
      'param_y_keyword': object(),
      'param_z_keyword': argument_z5}
     """
-  cast_zip = cast(Callable, zip)
   keyword_argument_mappings = map(
-      cast_zip, itertools.repeat(kwargs),
+      zip, itertools.repeat(kwargs),
       itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue))
   for flat_kwargs in keyword_argument_mappings:
     yield dict(flat_kwargs)
@@ -287,10 +286,8 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   """
   arguments = itertools.zip_longest(*kwargs.values())
   arguments, falsy_filter = itertools.tee(arguments)
-  cast_zip = cast(Callable, zip)
-  keyword_argument_pairs = map(cast_zip, itertools.repeat(kwargs), arguments)
-  cast_compress = cast(Callable, itertools.compress)
-  filtered_pairs = map(cast_compress, keyword_argument_pairs, falsy_filter)
+  keyword_argument_pairs = map(zip, itertools.repeat(kwargs), arguments)
+  filtered_pairs = map(itertools.compress, keyword_argument_pairs, falsy_filter)
   for flat_kwargs in filtered_pairs:
     yield dict(flat_kwargs)
 
@@ -336,13 +333,12 @@ def generate_flattened_kwargs_remove_sentinel(
       """
   arguments = itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue)
   arguments, sentinel_filter = itertools.tee(arguments)
-  cast_zip = cast(Callable, zip)
-  keyword_argument_pairs = map(cast_zip, itertools.repeat(kwargs), arguments)
+  keyword_argument_pairs = map(zip, itertools.repeat(kwargs), arguments)
   sentinel_filter = map(operator.ne,
                         itertools.chain.from_iterable(sentinel_filter),
                         itertools.repeat(sentinel))
-  cast_compress = cast(Callable, itertools.compress)
-  filtered_keyword_argument_pairs = map(cast_compress, keyword_argument_pairs,
+  filtered_keyword_argument_pairs = map(itertools.compress,
+                                        keyword_argument_pairs,
                                         itertools.repeat(sentinel_filter))
   for flat_kwargs in filtered_keyword_argument_pairs:
     yield dict(flat_kwargs)
@@ -576,7 +572,6 @@ def _copy_and_reformat(original, direction):
     A deep copy of the original dictionary, reformatted as specified.
   """
   deep_copy = copy.deepcopy(original)
-  deep_copy = cast(dict[str, Any], deep_copy)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
