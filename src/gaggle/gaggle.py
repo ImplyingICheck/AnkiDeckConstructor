@@ -80,7 +80,7 @@ if TYPE_CHECKING:
     def dialect(self) -> Dialect:
       ...
 
-    def writerow(self, row: Iterable) -> Any:
+    def writerow(self, row: Iterable[str]) -> Any:
       ...
 
   class SizedAppendable(Sized, SupportsAppend[_T_contra], Protocol[_T_contra]):
