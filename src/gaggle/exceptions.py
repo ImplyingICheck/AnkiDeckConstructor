@@ -77,9 +77,7 @@ class LeftoverArgumentWarning(Warning):
   """Gaggle warning when extra arguments remain after a function call. The extra
   arguments were not necessary to successfully complete the function call."""
 
-  def __init__(self,
-               context_message: Any,
-               leftovers: Iterable[Any],
+  def __init__(self, context_message: Any, leftovers: Iterable[Any],
                leftover_name: Any):
     self.leftovers = leftovers
     self.message = self._create_message(context_message, leftover_name)
