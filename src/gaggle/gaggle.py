@@ -158,26 +158,14 @@ def propagate_warnings(stack_level: int,
     @functools.wraps(function)
     def capture_and_raise_warnings(*args: _P.args, **kwargs: _P.kwargs) -> _R:
       with warnings.catch_warnings(record=True) as warning_context_manager:
-        return_value = function(*args, **kwargs)
+        if not yields:
+          return_value = function(*args, **kwargs)
+        else:
+          yield from function(*args, **kwargs)
       for warning in warning_context_manager:
         warnings.warn(warning.message, warning.category, stacklevel=stack_level)
-      return return_value
-
-    return capture_and_raise_warnings
-
-  return decorator
-
-
-def propagate_warnings_yield(stack_level):
-
-  def decorator(function):
-
-    @functools.wraps(function)
-    def capture_and_raise_warnings(*args, **kwargs):
-      with warnings.catch_warnings(record=True) as warning_context_manager:
-        yield from function(*args, **kwargs)
-      for warning in warning_context_manager:
-        warnings.warn(warning.message, warning.category, stacklevel=stack_level)
+      if not yields:
+        return return_value
 
     return capture_and_raise_warnings
 
@@ -830,7 +818,7 @@ def create_cards_from_tsv(
 _stack_levels_to_anki_card_init_call = 4
 
 
-@propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
+@propagate_warnings(_stack_levels_to_anki_card_init_call, yields=True)
 def _generate_unique_field_names(field_names: Iterator[str],
                                  fields: Iterator[Any],
                                  reserved_names: Mapping[int, str],
