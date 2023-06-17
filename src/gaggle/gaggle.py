@@ -148,8 +148,7 @@ _DIRECTION_MAPPING = {
 }
 
 
-def propagate_warnings(stack_level: int,
-                       yields: bool = False) -> Callable[_P, _R]:
+def propagate_warnings(stack_level: int) -> Callable[_P, _R]:
   """Captures output warnings and adjusts the context line of the warning to
   reflect the frame specified by stack_level."""
 
