@@ -26,8 +26,8 @@ import operator
 import enum
 import warnings
 from _csv import Dialect
-from typing import overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
-from collections.abc import Iterable, Iterator, Mapping, Sized
+from typing import overload, Any, ParamSpec, Protocol, Self, TypeVar, TYPE_CHECKING
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
 
 from gaggle import exceptions
 
@@ -38,6 +38,8 @@ if TYPE_CHECKING:
   _T_co = TypeVar('_T_co', covariant=True)
   _T_contra = TypeVar('_T_contra', contravariant=True)
   _S = TypeVar('_S')
+  _P = ParamSpec('_P')
+  _R = TypeVar('_R')
 
   class SupportsIndex(Protocol):
 
@@ -146,12 +148,15 @@ _DIRECTION_MAPPING = {
 }
 
 
-def propagate_warnings(stack_level):
+def propagate_warnings(stack_level: int,
+                       yields: bool = False) -> Callable[_P, _R]:
+  """Captures output warnings and adjusts the context line of the warning to
+  reflect the frame specified by stack_level."""
 
-  def decorator(function):
+  def decorator(function: Callable[_P, _R]) -> Callable[_P, _R]:
 
     @functools.wraps(function)
-    def capture_and_raise_warnings(*args, **kwargs):
+    def capture_and_raise_warnings(*args: _P.args, **kwargs: _P.kwargs) -> _R:
       with warnings.catch_warnings(record=True) as warning_context_manager:
         return_value = function(*args, **kwargs)
       for warning in warning_context_manager:
