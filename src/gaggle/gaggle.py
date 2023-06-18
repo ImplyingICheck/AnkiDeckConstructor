@@ -391,7 +391,7 @@ class Gaggle:
   def __iter__(self):
     return iter(self._get_decks())
 
-  def add_deck(self, deck):
+  def add_deck(self, deck: AnkiDeck) -> None:
     self.decks.append(deck)
 
   def add_deck_from_file(self, file: str) -> None:
@@ -430,14 +430,13 @@ class Gaggle:
   ) -> None:
     ...
 
-  def write_deck_to_file(
-      self,
-      deck,
-      /,
-      filename=None,
-      file_type=_ANKI_NOTESINPLAINTEXT_EXT,
-      destination='.',
-      extension=''):
+  def write_deck_to_file(self,
+                         deck,
+                         /,
+                         filename=None,
+                         file_type=_ANKI_NOTESINPLAINTEXT_EXT,
+                         destination='.',
+                         extension=''):
     """Writes a deck to a location in file storage. Supports various file naming
     features. See documentation for _generate_unique_file_path() for details on
     how the path is calculated. Will generate a unique filename if one is not
