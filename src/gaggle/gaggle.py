@@ -594,7 +594,7 @@ def _copy_and_reformat(
   ...
 
 
-def _copy_and_reformat(original, direction):
+def _copy_and_reformat(original: dict[str, Any], direction: ReformatDirection):
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
