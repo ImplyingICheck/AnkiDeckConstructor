@@ -493,7 +493,7 @@ class Gaggle:
     for idx, deck in enumerate(self._get_decks()):
       self.write_deck_to_file(deck, **next(flat_kwargs, {}))
       last_written_deck_idx = idx
-    if last_written_deck_idx != self._get_num_decks() - 1:
+    if last_written_deck_idx != len(self.decks) - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
   def _get_decks(self) -> list[AnkiDeck]:
@@ -506,9 +506,6 @@ class Gaggle:
 
   def get_deck(self, idx):
     return self.decks[idx]
-
-  def _get_num_decks(self):
-    return len(self.decks)
 
   def print_decks(self) -> None:
     """Outputs each AnkiCard contained in each Deck within the Gaggle to
