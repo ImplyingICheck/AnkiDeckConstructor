@@ -221,7 +221,8 @@ def _initialise_decks(
     return empty_list
 
 
-def _generate_unique_file_path(filename, extension, destination):
+def _generate_unique_file_path(filename: str | None, extension: str,
+                               destination: str) -> str:
   if not filename:
     filename = GENERIC_EXPORT_FILE_NAME
   file_exists = True
