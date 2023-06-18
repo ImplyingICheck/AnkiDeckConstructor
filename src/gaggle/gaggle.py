@@ -320,9 +320,9 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[_T],
 
 def generate_flattened_kwargs_remove_sentinel(
     sentinel: Any = None,
-    fillvalue: Any = None,
-    **kwargs: Iterable[Any],
-) -> Iterator[dict[str, Any]]:
+    fillvalue: _S = None,
+    **kwargs: Iterable[_T],
+) -> Iterator[dict[str, _T | _S]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and only arguments which match sentinel are removed.
   Missing arguments are filled with fillvalue.
