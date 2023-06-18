@@ -504,7 +504,7 @@ class Gaggle:
     """
     return self.decks
 
-  def get_deck(self, idx):
+  def get_deck(self, idx: int) -> AnkiDeck:
     return self.decks[idx]
 
   def print_decks(self) -> None:
