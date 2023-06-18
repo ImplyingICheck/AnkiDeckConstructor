@@ -376,7 +376,9 @@ class Gaggle:
   Handles deck construction and organisation.
   """
 
-  def __init__(self, exported_file=None, field_names=None):
+  def __init__(self,
+               exported_file: StrOrBytesPath | None = None,
+               field_names: Iterable[str] | None = None):
     """
 
     Args:
@@ -386,7 +388,7 @@ class Gaggle:
     Raises:
       FileNotFoundError: If file specified by exported_file does not exist
     """
-    self.decks = _initialise_decks(exported_file, field_names)
+    self.decks: list[AnkiDeck] = _initialise_decks(exported_file, field_names)
 
   def __iter__(self):
     return iter(self.decks)
