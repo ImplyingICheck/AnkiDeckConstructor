@@ -1014,7 +1014,7 @@ class AnkiCard:
   def __repr__(self):
     return str(self.fields)
 
-  def get_field(self, field_name):
+  def get_field(self, field_name: str) -> str:
     return self.fields[field_name]
 
   def as_str_list(self) -> list[str]:
