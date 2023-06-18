@@ -520,9 +520,9 @@ def transform_integer_value(
     scaled int.
   """
   try:
-    transformed_value = int(value)  # pyright: ignore [reportGeneralTypeIssues]
+    transformed_value = int(value)
   except ValueError:
-    return value  # pyright: ignore [reportGeneralTypeIssues]
+    return value
   else:
     transformed_value += translation
     transformed_value *= scale
@@ -589,7 +589,7 @@ def reformat_header_settings(
   reformatted_header = {}
   for setting, value in header.items():
     new_key = reformat_mapping[setting]
-    new_value: str | int = transform_integer_value(
+    new_value = transform_integer_value(
         value, translation=translation)
     reformatted_header[new_key] = new_value
   header.clear()
