@@ -431,12 +431,13 @@ class Gaggle:
     ...
 
   def write_deck_to_file(self,
-                         deck,
+                         deck: AnkiDeck | int,
                          /,
-                         filename=None,
-                         file_type=_ANKI_NOTESINPLAINTEXT_EXT,
-                         destination='.',
-                         extension=''):
+                         filename: str | None = None,
+                         file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
+                         destination: str = '.',
+                         extension: str = '',
+                         ) -> None:
     """Writes a deck to a location in file storage. Supports various file naming
     features. See documentation for _generate_unique_file_path() for details on
     how the path is calculated. Will generate a unique filename if one is not
