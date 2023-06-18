@@ -224,6 +224,7 @@ def _generate_unique_file_path(filename, extension, destination):
   if not filename:
     filename = GENERIC_EXPORT_FILE_NAME
   file_exists = True
+  file_path = ''
   tag = 0
   if filename == GENERIC_EXPORT_FILE_NAME:
     modified_filename = f'{filename}{tag}'
@@ -237,7 +238,7 @@ def _generate_unique_file_path(filename, extension, destination):
     if file_exists:
       modified_filename = f'{filename}{tag}'
       tag += 1
-  return modified_filename
+  return file_path
 
 
 def generate_flattened_kwargs_fill_missing(
