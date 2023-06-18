@@ -195,14 +195,14 @@ def _initialise_decks(
 def _initialise_decks(
     exported_file: None = None,
     field_names: None = None,
-) -> list[Any]:
+) -> list[AnkiDeck]:
   ...
 
 
 def _initialise_decks(
     exported_file: StrOrBytesPath | None = None,
     field_names: Iterable[str] | None = None,
-) -> list[AnkiDeck] | list[Any]:
+) -> list[AnkiDeck]:
   """
 
   Args:
@@ -217,7 +217,8 @@ def _initialise_decks(
   if exported_file:
     return [AnkiDeck.from_file(exported_file, field_names)]
   else:
-    return []
+    empty_list: list[AnkiDeck] = []
+    return empty_list
 
 
 def _generate_unique_file_path(filename, extension, destination):
