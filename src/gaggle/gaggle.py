@@ -389,7 +389,7 @@ class Gaggle:
     self.decks = _initialise_decks(exported_file, field_names)
 
   def __iter__(self):
-    return iter(self._get_decks())
+    return iter(self.decks)
 
   def add_deck(self, deck: AnkiDeck) -> None:
     self.decks.append(deck)
@@ -490,19 +490,11 @@ class Gaggle:
     flat_kwargs = generate_flattened_kwargs_remove_sentinel(
         sentinel='', **kwargs)
     last_written_deck_idx = None
-    for idx, deck in enumerate(self._get_decks()):
+    for idx, deck in enumerate(self.decks):
       self.write_deck_to_file(deck, **next(flat_kwargs, {}))
       last_written_deck_idx = idx
     if last_written_deck_idx != len(self.decks) - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
-
-  def _get_decks(self) -> list[AnkiDeck]:
-    """Getter for list containing Deck objects in Gaggle
-
-    Returns:
-      List containing Deck objects store in Gaggle
-    """
-    return self.decks
 
   def get_deck(self, idx: int) -> AnkiDeck:
     return self.decks[idx]
