@@ -26,13 +26,13 @@ import operator
 import enum
 import warnings
 from _csv import Dialect
-from typing import overload, Any, ParamSpec, Protocol, Self, TypeVar, TYPE_CHECKING
+from typing import overload, Any, ParamSpec, Protocol, Self, SupportsIndex, SupportsInt, TypeVar, TYPE_CHECKING
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
 
 from gaggle import exceptions
 
 if TYPE_CHECKING:
-  from _typeshed import ReadableBuffer, SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
+  from _typeshed import ReadableBuffer, SupportsTrunc, SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
   _T = TypeVar('_T')
   _T_co = TypeVar('_T_co', covariant=True)
@@ -40,21 +40,6 @@ if TYPE_CHECKING:
   _S = TypeVar('_S')
   _P = ParamSpec('_P')
   _R = TypeVar('_R')
-
-  class SupportsIndex(Protocol):
-
-    def __index__(self) -> int:
-      ...
-
-  class SupportsInt(Protocol):
-
-    def __int__(self) -> int:
-      ...
-
-  class SupportsTrunc(Protocol):
-
-    def __trunc__(self) -> int:
-      ...
 
   class Falsy(Protocol):
 
@@ -94,7 +79,8 @@ if TYPE_CHECKING:
                             Seekable, Protocol[_T_co]):
     ...
 
-  RealNumber = SupportsInt | SupportsTrunc
+  CastableToInt = (
+      str | ReadableBuffer | SupportsInt | SupportsIndex | SupportsTrunc)
   # dict() is invariant so value type [str | int] and [str] must be declared
   AnkiHeader = dict[str, str | int] | dict[str, str]
 
@@ -512,47 +498,11 @@ class Gaggle:
         print(card)
 
 
-@overload
 def transform_integer_value(
-    value: RealNumber,
+    value: CastableToInt,
     translation: int = 0,
     scale: int = 1,
-) -> int:
-  ...
-
-
-@overload
-def transform_integer_value(
-    value: SupportsIndex,
-    translation: int = 0,
-    scale: int = 1,
-) -> SupportsIndex | int:
-  ...
-
-
-@overload
-def transform_integer_value(
-    value: ReadableBuffer,
-    translation: int = 0,
-    scale: int = 1,
-) -> ReadableBuffer | int:
-  ...
-
-
-@overload
-def transform_integer_value(
-    value: _T,
-    translation: int = 0,
-    scale: int = 1,
-) -> _T:
-  ...
-
-
-def transform_integer_value(
-    value: RealNumber | SupportsIndex | ReadableBuffer | _T,
-    translation: int = 0,
-    scale: int = 1,
-) -> int | SupportsIndex | ReadableBuffer | _T:
+) -> CastableToInt | int:
   """Attempt to convert value into an int(). If successful, translate the
   resulting int and then scale it. If value cannot be converted, it is returned
   as is.
@@ -639,7 +589,8 @@ def reformat_header_settings(
   reformatted_header = {}
   for setting, value in header.items():
     new_key = reformat_mapping[setting]
-    new_value = transform_integer_value(value, translation=translation)
+    new_value: str | int = transform_integer_value(
+        value, translation=translation)
     reformatted_header[new_key] = new_value
   header.clear()
   header.update(reformatted_header)
