@@ -32,7 +32,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
 from gaggle import exceptions
 
 if TYPE_CHECKING:
-  from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
+  from _typeshed import ReadableBuffer, SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
   _T = TypeVar('_T')
   _T_co = TypeVar('_T_co', covariant=True)
@@ -529,21 +529,29 @@ def transform_integer_value(
 ) -> SupportsIndex | int:
   ...
 
+@overload
+def transform_integer_value(
+    value: ReadableBuffer,
+    translation: int = 0,
+    scale: int = 1,
+) -> ReadableBuffer | int:
+  ...
+
 
 @overload
 def transform_integer_value(
     value: _T,
     translation: int = 0,
     scale: int = 1,
-) -> _T | int:
+) -> _T:
   ...
 
 
 def transform_integer_value(
-    value: RealNumber | SupportsIndex | _T,
+    value: RealNumber | SupportsIndex | ReadableBuffer | _T,
     translation: int = 0,
     scale: int = 1,
-) -> int | SupportsIndex | _T:
+) -> int | SupportsIndex | ReadableBuffer | _T:
   """Attempt to convert value into an int(). If successful, translate the
   resulting int and then scale it. If value cannot be converted, it is returned
   as is.
@@ -561,9 +569,9 @@ def transform_integer_value(
     scaled int.
   """
   try:
-    transformed_value = int(value)
+    transformed_value = int(value) # pyright: ignore [reportGeneralTypeIssues]
   except ValueError:
-    return value
+    return value # pyright: ignore [reportGeneralTypeIssues]
   else:
     transformed_value += translation
     transformed_value *= scale
