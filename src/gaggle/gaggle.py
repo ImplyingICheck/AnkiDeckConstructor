@@ -27,7 +27,7 @@ import enum
 import warnings
 from _csv import Dialect
 from typing import overload, Any, ParamSpec, Protocol, Self, SupportsIndex, SupportsInt, TypeVar, TYPE_CHECKING
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sized
 
 from gaggle import exceptions
 
@@ -539,13 +539,16 @@ def _copy_and_reformat(
 
 @overload
 def _copy_and_reformat(
-    original: Mapping[str, _T],
+    original: MutableMapping[str, _T],
     direction: ReformatDirection,
-) -> dict[str, _T | int] | dict[str, _T] | AnkiHeader:
+) -> MutableMapping[str, _T | int] | MutableMapping[str, _T] | AnkiHeader:
   ...
 
 
-def _copy_and_reformat(original: dict[str, Any], direction: ReformatDirection):
+def _copy_and_reformat(
+    original: AnkiHeader | MutableMapping[str, Any],
+    direction: ReformatDirection
+) -> AnkiHeader | MutableMapping[str, _T | int] | MutableMapping[str, _T]:
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
@@ -562,7 +565,7 @@ def _copy_and_reformat(original: dict[str, Any], direction: ReformatDirection):
 
 
 def reformat_header_settings(
-    header: dict[str, Any],
+    header: MutableMapping[str, Any],
     direction: ReformatDirection,
 ) -> None:
   """Convert between Anki header naming style and Gaggle header naming style.
