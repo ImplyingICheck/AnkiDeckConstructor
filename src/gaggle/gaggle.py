@@ -589,8 +589,7 @@ def reformat_header_settings(
   reformatted_header = {}
   for setting, value in header.items():
     new_key = reformat_mapping[setting]
-    new_value = transform_integer_value(
-        value, translation=translation)
+    new_value = transform_integer_value(value, translation=translation)
     reformatted_header[new_key] = new_value
   header.clear()
   header.update(reformatted_header)
@@ -615,7 +614,7 @@ def read_header_settings(f: ReadableAndSeekable[str]) -> AnkiHeader:
   """
   header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
   header_separator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
-  header = {}
+  header: AnkiHeader = {}
   reader_pos = f.tell()
   while f.read(1) == header_symbol:
     line = f.readline()
@@ -895,7 +894,7 @@ def _generate_field_dict(
   return collections.OrderedDict(name_field_tuples)
 
 
-def _parse_anki_header_bool(bool_as_str: HeaderBoolean) -> bool:
+def _parse_anki_header_bool(bool_as_str: str) -> bool:
   """Translate boolean notation from Anki generated file header to Python
   bool type.
 
@@ -933,7 +932,7 @@ class AnkiCard:
   def __init__(self,
                fields: Iterable[str],
                field_names: Iterable[str] | None = None,
-               has_html: HeaderBoolean = HeaderBoolean.FALSE_,
+               has_html: str = HeaderBoolean.FALSE_,
                tags_idx: int | None = None,
                note_type_idx: int | None = None,
                deck_idx: int | None = None,
