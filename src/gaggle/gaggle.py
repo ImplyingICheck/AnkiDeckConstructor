@@ -410,6 +410,7 @@ class Gaggle:
   def write_deck_to_file(
       self,
       deck: AnkiDeck,
+      /,
       filename: str | None = None,
       file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
       destination: str = '.',
@@ -421,6 +422,7 @@ class Gaggle:
   def write_deck_to_file(
       self,
       deck_idx: int,
+      /,
       filename: str | None = None,
       file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
       destination: str = '.',
@@ -428,9 +430,10 @@ class Gaggle:
   ) -> None:
     ...
 
-  def write_deck_to_file(  # pyright: ignore [reportGeneralTypeIssues]
+  def write_deck_to_file(
       self,
       deck,
+      /,
       filename=None,
       file_type=_ANKI_NOTESINPLAINTEXT_EXT,
       destination='.',
