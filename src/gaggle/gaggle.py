@@ -432,14 +432,15 @@ class Gaggle:
   ) -> None:
     ...
 
-  def write_deck_to_file(self,
-                         deck: AnkiDeck | int,
-                         /,
-                         filename: str | None = None,
-                         file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
-                         destination: str = '.',
-                         extension: str = '',
-                         ) -> None:
+  def write_deck_to_file(
+      self,
+      deck: AnkiDeck | int,
+      /,
+      filename: str | None = None,
+      file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
+      destination: str = '.',
+      extension: str = '',
+  ) -> None:
     """Writes a deck to a location in file storage. Supports various file naming
     features. See documentation for _generate_unique_file_path() for details on
     how the path is calculated. Will generate a unique filename if one is not
@@ -538,7 +539,11 @@ def transform_integer_value(
   ...
 
 
-def transform_integer_value(value, translation=0, scale=1):
+def transform_integer_value(
+    value: RealNumber | SupportsIndex | _T,
+    translation: int = 0,
+    scale: int = 1,
+) -> int | SupportsIndex | _T:
   """Attempt to convert value into an int(). If successful, translate the
   resulting int and then scale it. If value cannot be converted, it is returned
   as is.
