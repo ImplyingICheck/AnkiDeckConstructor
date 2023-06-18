@@ -529,6 +529,7 @@ def transform_integer_value(
 ) -> SupportsIndex | int:
   ...
 
+
 @overload
 def transform_integer_value(
     value: ReadableBuffer,
@@ -569,9 +570,9 @@ def transform_integer_value(
     scaled int.
   """
   try:
-    transformed_value = int(value) # pyright: ignore [reportGeneralTypeIssues]
+    transformed_value = int(value)  # pyright: ignore [reportGeneralTypeIssues]
   except ValueError:
-    return value # pyright: ignore [reportGeneralTypeIssues]
+    return value  # pyright: ignore [reportGeneralTypeIssues]
   else:
     transformed_value += translation
     transformed_value *= scale
