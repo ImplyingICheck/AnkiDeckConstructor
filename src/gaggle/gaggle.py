@@ -283,8 +283,8 @@ def generate_flattened_kwargs_fill_missing(
     yield dict(flat_kwargs)
 
 
-def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
-                                          ) -> Iterator[dict[str, Any]]:
+def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[_T],
+                                          ) -> Iterator[dict[str, _T]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and falsy values are not returned.
 
