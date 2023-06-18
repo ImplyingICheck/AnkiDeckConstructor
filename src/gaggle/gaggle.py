@@ -183,7 +183,26 @@ def propagate_warnings_yield(stack_level):
   return decorator
 
 
-def _initialise_decks(exported_file, field_names):
+@overload
+def _initialise_decks(
+    exported_file: StrOrBytesPath,
+    field_names: Iterable[str] | None = None,
+) -> list[AnkiDeck]:
+  ...
+
+
+@overload
+def _initialise_decks(
+    exported_file: None = None,
+    field_names: None = None,
+) -> list[Any]:
+  ...
+
+
+def _initialise_decks(
+    exported_file: StrOrBytesPath | None = None,
+    field_names: Iterable[str] | None = None,
+) -> list[AnkiDeck] | list[Any]:
   """
 
   Args:
