@@ -740,7 +740,9 @@ class AnkiDeck:
     self.cards = cards
 
   @classmethod
-  def from_file(cls, file, field_names=None) -> Self:
+  def from_file(cls,
+                file: StrOrBytesPath,
+                field_names: Iterable[str] | None = None) -> Self:
     """Factory method to create an AnkiDeck directly from a file.
 
     Args:
