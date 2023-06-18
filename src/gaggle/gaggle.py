@@ -1030,7 +1030,7 @@ class AnkiCard:
       [column0, column1, column2]
 
     """
-    str_list = []
+    str_list: list[str] = []
     for field_value in self.fields.values():
       str_list.append(field_value)
     return str_list
