@@ -244,9 +244,9 @@ def _generate_unique_file_path(filename: str | None, extension: str,
 
 
 def generate_flattened_kwargs_fill_missing(
-    fillvalue: Any = None,
-    **kwargs: Iterator[Any],
-) -> Iterator[dict[str, Any]]:
+    fillvalue: _S = None,
+    **kwargs: Iterable[_T] | Iterator[_T],
+) -> Iterator[dict[str, _T | _S]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and missing arguments are filled with fillvalue.
 
