@@ -47,6 +47,8 @@ include = ["src"]
 exclude = ["dev_files/*.py"]
 strict = ["src/gaggle"]
 reportMissingImports = true
+reportUntypedFunctionDecorator = true
+reportUntypedClassDecorator = true
 
 [build-system]
 requires = ["poetry-core"]
