@@ -15,6 +15,6 @@
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
 
 # Repository for storing developer-specific files and large files for testing
-dev_files/*
+test_files/*
 # Maintain (almost) empty directories
-!dev_files/.gitkeep
+!test_files/.gitkeep
