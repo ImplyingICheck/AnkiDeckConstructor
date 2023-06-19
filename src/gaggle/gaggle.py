@@ -400,34 +400,10 @@ class Gaggle:
     deck = AnkiDeck.from_file(file)
     self.add_deck(deck)
 
-  @overload
-  def write_deck_to_file(
-      self,
-      deck: AnkiDeck,
-      /,
-      filename: str | None = None,
-      file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
-      destination: str = '.',
-      extension: str = '',
-  ) -> None:
-    ...
-
-  @overload
-  def write_deck_to_file(
-      self,
-      deck_idx: int,
-      /,
-      filename: str | None = None,
-      file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
-      destination: str = '.',
-      extension: str = '',
-  ) -> None:
-    ...
 
   def write_deck_to_file(
       self,
       deck: AnkiDeck | int,
-      /,
       filename: str | None = None,
       file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
       destination: str = '.',
@@ -486,7 +462,8 @@ class Gaggle:
         sentinel='', **kwargs)
     last_written_deck_idx = None
     for idx, deck in enumerate(self.decks):
-      self.write_deck_to_file(deck, **next(flat_kwargs, {}))
+      empty_header: dict[str, Any] = {}
+      self.write_deck_to_file(deck, **next(flat_kwargs, empty_header))
       last_written_deck_idx = idx
     if last_written_deck_idx != len(self.decks) - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
