@@ -26,33 +26,21 @@ import operator
 import enum
 import warnings
 from _csv import Dialect
-from typing import cast, overload, Any, Protocol, Self, TypeVar, TYPE_CHECKING
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sized
+from typing import overload, Any, ParamSpec, Protocol, Self, SupportsIndex, SupportsInt, TypeVar, TYPE_CHECKING
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sized
 
 from gaggle import exceptions
 
 if TYPE_CHECKING:
-  from _typeshed import SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
+  from _typeshed import ReadableBuffer, SupportsTrunc, SupportsWrite, StrOrBytesPath, SupportsReadline, SupportsRead
 
   _T = TypeVar('_T')
   _T_co = TypeVar('_T_co', covariant=True)
   _T_contra = TypeVar('_T_contra', contravariant=True)
   _S = TypeVar('_S')
-
-  class SupportsIndex(Protocol):
-
-    def __index__(self) -> int:
-      ...
-
-  class SupportsInt(Protocol):
-
-    def __int__(self) -> int:
-      ...
-
-  class SupportsTrunc(Protocol):
-
-    def __trunc__(self) -> int:
-      ...
+  _P = ParamSpec('_P')
+  _P_helper = ParamSpec('_P_helper')
+  _R = TypeVar('_R')
 
   class Falsy(Protocol):
 
@@ -66,10 +54,10 @@ if TYPE_CHECKING:
 
   class Seekable(Protocol):
 
-    def tell(self) -> Any:
+    def tell(self) -> int:
       ...
 
-    def seek(self, position: Any) -> Any:
+    def seek(self, __cookie: int, __whence: int = 0) -> int:  # pylint: disable=invalid-name
       ...
 
   class SupportsWriteRow(Protocol):
@@ -78,7 +66,7 @@ if TYPE_CHECKING:
     def dialect(self) -> Dialect:
       ...
 
-    def writerow(self, row: Iterable[_T_co]) -> Any:
+    def writerow(self, row: Iterable[str]) -> Any:
       ...
 
   class SizedAppendable(Sized, SupportsAppend[_T_contra], Protocol[_T_contra]):
@@ -92,7 +80,8 @@ if TYPE_CHECKING:
                             Seekable, Protocol[_T_co]):
     ...
 
-  RealNumber = SupportsInt | SupportsTrunc
+  CastableToInt = (
+      str | ReadableBuffer | SupportsInt | SupportsIndex | SupportsTrunc)
   # dict() is invariant so value type [str | int] and [str] must be declared
   AnkiHeader = dict[str, str | int] | dict[str, str]
 
@@ -146,12 +135,15 @@ _DIRECTION_MAPPING = {
 }
 
 
-def propagate_warnings(stack_level):
+def propagate_warnings(
+    stack_level: int) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+  """Captures output warnings and adjusts the context line of the warning to
+  reflect the frame specified by stack_level."""
 
-  def decorator(function):
+  def decorator(function: Callable[_P, _R]) -> Callable[_P, _R]:
 
     @functools.wraps(function)
-    def capture_and_raise_warnings(*args, **kwargs):
+    def capture_and_raise_warnings(*args: _P.args, **kwargs: _P.kwargs) -> _R:
       with warnings.catch_warnings(record=True) as warning_context_manager:
         return_value = function(*args, **kwargs)
       for warning in warning_context_manager:
@@ -163,12 +155,16 @@ def propagate_warnings(stack_level):
   return decorator
 
 
-def propagate_warnings_yield(stack_level):
+def propagate_warnings_from_generator(
+    stack_level: int
+) -> Callable[[Callable[_P, Iterator[_R]]], Callable[_P, Iterator[_R]]]:
 
-  def decorator(function):
+  def decorator(
+      function: Callable[_P, Iterator[_R]]) -> Callable[_P, Iterator[_R]]:
 
     @functools.wraps(function)
-    def capture_and_raise_warnings(*args, **kwargs):
+    def capture_and_raise_warnings(*args: _P.args,
+                                   **kwargs: _P.kwargs) -> Iterator[_R]:
       with warnings.catch_warnings(record=True) as warning_context_manager:
         yield from function(*args, **kwargs)
       for warning in warning_context_manager:
@@ -179,7 +175,10 @@ def propagate_warnings_yield(stack_level):
   return decorator
 
 
-def _initialise_decks(exported_file, field_names):
+def _initialise_decks(
+    exported_file: StrOrBytesPath | None = None,
+    field_names: Iterable[str] | None = None,
+) -> list[AnkiDeck]:
   """
 
   Args:
@@ -194,13 +193,16 @@ def _initialise_decks(exported_file, field_names):
   if exported_file:
     return [AnkiDeck.from_file(exported_file, field_names)]
   else:
-    return []
+    empty_list: list[AnkiDeck] = []
+    return empty_list
 
 
-def _generate_unique_file_path(filename, extension, destination):
+def _generate_unique_file_path(filename: str | None, extension: str,
+                               destination: str) -> str:
   if not filename:
     filename = GENERIC_EXPORT_FILE_NAME
   file_exists = True
+  file_path = ''
   tag = 0
   if filename == GENERIC_EXPORT_FILE_NAME:
     modified_filename = f'{filename}{tag}'
@@ -214,13 +216,13 @@ def _generate_unique_file_path(filename, extension, destination):
     if file_exists:
       modified_filename = f'{filename}{tag}'
       tag += 1
-  return modified_filename
+  return file_path
 
 
 def generate_flattened_kwargs_fill_missing(
-    fillvalue: Any = None,
-    **kwargs: Iterator[Any],
-) -> Iterator[dict[str, Any]]:
+    fillvalue: _S = None,
+    **kwargs: Iterable[_T] | Iterator[_T],
+) -> Iterator[dict[str, _T | _S]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and missing arguments are filled with fillvalue.
 
@@ -250,16 +252,15 @@ def generate_flattened_kwargs_fill_missing(
      'param_y_keyword': object(),
      'param_z_keyword': argument_z5}
     """
-  cast_zip = cast(Callable, zip)
   keyword_argument_mappings = map(
-      cast_zip, itertools.repeat(kwargs),
+      zip, itertools.repeat(kwargs),
       itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue))
   for flat_kwargs in keyword_argument_mappings:
     yield dict(flat_kwargs)
 
 
-def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
-                                          ) -> Iterator[dict[str, Any]]:
+def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[_T],
+                                          ) -> Iterator[dict[str, _T]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and falsy values are not returned.
 
@@ -287,19 +288,17 @@ def generate_flattened_kwargs_remove_falsy(**kwargs: Iterable[Any],
   """
   arguments = itertools.zip_longest(*kwargs.values())
   arguments, falsy_filter = itertools.tee(arguments)
-  cast_zip = cast(Callable, zip)
-  keyword_argument_pairs = map(cast_zip, itertools.repeat(kwargs), arguments)
-  cast_compress = cast(Callable, itertools.compress)
-  filtered_pairs = map(cast_compress, keyword_argument_pairs, falsy_filter)
+  keyword_argument_pairs = map(zip, itertools.repeat(kwargs), arguments)
+  filtered_pairs = map(itertools.compress, keyword_argument_pairs, falsy_filter)
   for flat_kwargs in filtered_pairs:
     yield dict(flat_kwargs)
 
 
 def generate_flattened_kwargs_remove_sentinel(
     sentinel: Any = None,
-    fillvalue: Any = None,
-    **kwargs: Iterable[Any],
-) -> Iterator[dict[str, Any]]:
+    fillvalue: _S = None,
+    **kwargs: Iterable[_T],
+) -> Iterator[dict[str, _T | _S]]:
   """Generator which yields a dictionary of keywords to arguments. The values
   have lazy evaluation and only arguments which match sentinel are removed.
   Missing arguments are filled with fillvalue.
@@ -336,13 +335,12 @@ def generate_flattened_kwargs_remove_sentinel(
       """
   arguments = itertools.zip_longest(*kwargs.values(), fillvalue=fillvalue)
   arguments, sentinel_filter = itertools.tee(arguments)
-  cast_zip = cast(Callable, zip)
-  keyword_argument_pairs = map(cast_zip, itertools.repeat(kwargs), arguments)
+  keyword_argument_pairs = map(zip, itertools.repeat(kwargs), arguments)
   sentinel_filter = map(operator.ne,
                         itertools.chain.from_iterable(sentinel_filter),
                         itertools.repeat(sentinel))
-  cast_compress = cast(Callable, itertools.compress)
-  filtered_keyword_argument_pairs = map(cast_compress, keyword_argument_pairs,
+  filtered_keyword_argument_pairs = map(itertools.compress,
+                                        keyword_argument_pairs,
                                         itertools.repeat(sentinel_filter))
   for flat_kwargs in filtered_keyword_argument_pairs:
     yield dict(flat_kwargs)
@@ -354,7 +352,9 @@ class Gaggle:
   Handles deck construction and organisation.
   """
 
-  def __init__(self, exported_file=None, field_names=None):
+  def __init__(self,
+               exported_file: StrOrBytesPath | None = None,
+               field_names: Iterable[str] | None = None):
     """
 
     Args:
@@ -364,12 +364,12 @@ class Gaggle:
     Raises:
       FileNotFoundError: If file specified by exported_file does not exist
     """
-    self.decks = _initialise_decks(exported_file, field_names)
+    self.decks: list[AnkiDeck] = _initialise_decks(exported_file, field_names)
 
   def __iter__(self):
-    return iter(self._get_decks())
+    return iter(self.decks)
 
-  def add_deck(self, deck):
+  def add_deck(self, deck: AnkiDeck) -> None:
     self.decks.append(deck)
 
   def add_deck_from_file(self, file: str) -> None:
@@ -384,34 +384,14 @@ class Gaggle:
     deck = AnkiDeck.from_file(file)
     self.add_deck(deck)
 
-  @overload
   def write_deck_to_file(
       self,
-      deck: AnkiDeck,
+      deck: AnkiDeck | int,
       filename: str | None = None,
       file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
       destination: str = '.',
       extension: str = '',
   ) -> None:
-    ...
-
-  @overload
-  def write_deck_to_file(
-      self,
-      deck_idx: int,
-      filename: str | None = None,
-      file_type: str = _ANKI_NOTESINPLAINTEXT_EXT,
-      destination: str = '.',
-      extension: str = '',
-  ) -> None:
-    ...
-
-  def write_deck_to_file(self,
-                         deck,
-                         filename=None,
-                         file_type=_ANKI_NOTESINPLAINTEXT_EXT,
-                         destination='.',
-                         extension=''):
     """Writes a deck to a location in file storage. Supports various file naming
     features. See documentation for _generate_unique_file_path() for details on
     how the path is calculated. Will generate a unique filename if one is not
@@ -464,25 +444,15 @@ class Gaggle:
     flat_kwargs = generate_flattened_kwargs_remove_sentinel(
         sentinel='', **kwargs)
     last_written_deck_idx = None
-    for idx, deck in enumerate(self._get_decks()):
-      self.write_deck_to_file(deck, **next(flat_kwargs, {}))
+    for idx, deck in enumerate(self.decks):
+      empty_header: dict[str, Any] = {}
+      self.write_deck_to_file(deck, **next(flat_kwargs, empty_header))
       last_written_deck_idx = idx
-    if last_written_deck_idx != self._get_num_decks() - 1:
+    if last_written_deck_idx != len(self.decks) - 1:
       raise exceptions.DecksNotWrittenException(last_written_deck_idx)
 
-  def _get_decks(self) -> list[AnkiDeck]:
-    """Getter for list containing Deck objects in Gaggle
-
-    Returns:
-      List containing Deck objects store in Gaggle
-    """
-    return self.decks
-
-  def get_deck(self, idx):
+  def get_deck(self, idx: int) -> AnkiDeck:
     return self.decks[idx]
-
-  def _get_num_decks(self):
-    return len(self.decks)
 
   def print_decks(self) -> None:
     """Outputs each AnkiCard contained in each Deck within the Gaggle to
@@ -494,34 +464,11 @@ class Gaggle:
         print(card)
 
 
-@overload
 def transform_integer_value(
-    value: RealNumber,
+    value: CastableToInt,
     translation: int = 0,
     scale: int = 1,
-) -> int:
-  ...
-
-
-@overload
-def transform_integer_value(
-    value: SupportsIndex,
-    translation: int = 0,
-    scale: int = 1,
-) -> SupportsIndex | int:
-  ...
-
-
-@overload
-def transform_integer_value(
-    value: _T,
-    translation: int = 0,
-    scale: int = 1,
-) -> _T | int:
-  ...
-
-
-def transform_integer_value(value, translation=0, scale=1):
+) -> CastableToInt | int:
   """Attempt to convert value into an int(). If successful, translate the
   resulting int and then scale it. If value cannot be converted, it is returned
   as is.
@@ -558,13 +505,16 @@ def _copy_and_reformat(
 
 @overload
 def _copy_and_reformat(
-    original: Mapping[str, _T],
+    original: MutableMapping[str, _T],
     direction: ReformatDirection,
-) -> dict[str, _T | int] | dict[str, _T] | AnkiHeader:
+) -> MutableMapping[str, _T | int] | MutableMapping[str, _T] | AnkiHeader:
   ...
 
 
-def _copy_and_reformat(original, direction):
+def _copy_and_reformat(
+    original: AnkiHeader | MutableMapping[str, Any],
+    direction: ReformatDirection
+) -> AnkiHeader | MutableMapping[str, _T | int] | MutableMapping[str, _T]:
   """Helper function to create a copy of a dictionary and format it as desired.
   Intended for internal use when writing a deck to stream.
 
@@ -576,13 +526,12 @@ def _copy_and_reformat(original, direction):
     A deep copy of the original dictionary, reformatted as specified.
   """
   deep_copy = copy.deepcopy(original)
-  deep_copy = cast(dict[str, Any], deep_copy)
   reformat_header_settings(deep_copy, direction)
   return deep_copy
 
 
 def reformat_header_settings(
-    header: dict[str, Any],
+    header: MutableMapping[str, Any],
     direction: ReformatDirection,
 ) -> None:
   """Convert between Anki header naming style and Gaggle header naming style.
@@ -634,13 +583,14 @@ def read_header_settings(f: ReadableAndSeekable[str]) -> AnkiHeader:
   """
   header_symbol = _ANKI_EXPORT_HEADER_LINE_SYMBOL
   header_separator = _ANKI_EXPORT_HEADER_DELIMITER_SYMBOL
-  header = {}
+  header: AnkiHeader = {}
   reader_pos = f.tell()
   while f.read(1) == header_symbol:
     line = f.readline()
     setting, value = line.split(header_separator)
     value = value.rstrip()
     value = transform_integer_value(value)
+    assert isinstance(value, str | int)
     header[setting] = value
     reader_pos = f.tell()
   f.seek(reader_pos)
@@ -715,7 +665,9 @@ class AnkiDeck:
     self.cards = cards
 
   @classmethod
-  def from_file(cls, file, field_names=None) -> Self:
+  def from_file(cls,
+                file: StrOrBytesPath,
+                field_names: Iterable[str] | None = None) -> Self:
     """Factory method to create an AnkiDeck directly from a file.
 
     Args:
@@ -816,8 +768,10 @@ def create_cards_from_tsv(
   Returns:
     A list of AnkiCards. Useful for constructing an AnkiDeck.
   """
+  if header is None:
+    header = {}
   cards = csv.reader(f, dialect='excel-tab')
-  deck = []
+  deck: list[AnkiCard] = []
   for card in cards:
     anki_card = AnkiCard(card, field_names=field_names, **header)
     deck.append(anki_card)
@@ -828,9 +782,9 @@ def create_cards_from_tsv(
 _stack_levels_to_anki_card_init_call = 4
 
 
-@propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
+@propagate_warnings_from_generator(_stack_levels_to_anki_card_init_call)
 def _generate_unique_field_names(field_names: Iterator[str],
-                                 fields: Iterator[_T],
+                                 fields: Iterator[Any],
                                  reserved_names: Mapping[int, str],
                                  seen_names: set[str]) -> Iterator[str]:
   """Generator for field names; prevents duplicate names from being returned.
@@ -909,7 +863,7 @@ def _generate_field_dict(
   return collections.OrderedDict(name_field_tuples)
 
 
-def _parse_anki_header_bool(bool_as_str: HeaderBoolean) -> bool:
+def _parse_anki_header_bool(bool_as_str: str) -> bool:
   """Translate boolean notation from Anki generated file header to Python
   bool type.
 
@@ -947,7 +901,7 @@ class AnkiCard:
   def __init__(self,
                fields: Iterable[str],
                field_names: Iterable[str] | None = None,
-               has_html: HeaderBoolean = HeaderBoolean.FALSE_,
+               has_html: str = HeaderBoolean.FALSE_,
                tags_idx: int | None = None,
                note_type_idx: int | None = None,
                deck_idx: int | None = None,
@@ -1029,7 +983,7 @@ class AnkiCard:
   def __repr__(self):
     return str(self.fields)
 
-  def get_field(self, field_name):
+  def get_field(self, field_name: str) -> str:
     return self.fields[field_name]
 
   def as_str_list(self) -> list[str]:
@@ -1045,7 +999,7 @@ class AnkiCard:
       [column0, column1, column2]
 
     """
-    str_list = []
+    str_list: list[str] = []
     for field_value in self.fields.values():
       str_list.append(field_value)
     return str_list
