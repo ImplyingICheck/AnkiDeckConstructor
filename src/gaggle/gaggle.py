@@ -384,7 +384,6 @@ class Gaggle:
     deck = AnkiDeck.from_file(file)
     self.add_deck(deck)
 
-
   def write_deck_to_file(
       self,
       deck: AnkiDeck | int,
