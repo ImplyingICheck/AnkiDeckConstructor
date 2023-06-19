@@ -39,6 +39,7 @@ if TYPE_CHECKING:
   _T_contra = TypeVar('_T_contra', contravariant=True)
   _S = TypeVar('_S')
   _P = ParamSpec('_P')
+  _P_helper = ParamSpec('_P_helper')
   _R = TypeVar('_R')
 
   class Falsy(Protocol):
@@ -134,7 +135,8 @@ _DIRECTION_MAPPING = {
 }
 
 
-def propagate_warnings(stack_level: int) -> Callable[_P, _R]:
+def propagate_warnings(
+    stack_level: int) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
   """Captures output warnings and adjusts the context line of the warning to
   reflect the frame specified by stack_level."""
 
@@ -153,12 +155,16 @@ def propagate_warnings(stack_level: int) -> Callable[_P, _R]:
   return decorator
 
 
-def propagate_warnings_yield(stack_level):
+def propagate_warnings_from_generator(
+    stack_level: int
+) -> Callable[[Callable[_P, Iterator[_R]]], Callable[_P, Iterator[_R]]]:
 
-  def decorator(function):
+  def decorator(
+      function: Callable[_P, Iterator[_R]]) -> Callable[_P, Iterator[_R]]:
 
     @functools.wraps(function)
-    def capture_and_raise_warnings(*args, **kwargs):
+    def capture_and_raise_warnings(*args: _P.args,
+                                   **kwargs: _P.kwargs) -> Iterator[_R]:
       with warnings.catch_warnings(record=True) as warning_context_manager:
         yield from function(*args, **kwargs)
       for warning in warning_context_manager:
@@ -816,7 +822,7 @@ def create_cards_from_tsv(
 _stack_levels_to_anki_card_init_call = 4
 
 
-@propagate_warnings_yield(_stack_levels_to_anki_card_init_call)
+@propagate_warnings_from_generator(_stack_levels_to_anki_card_init_call)
 def _generate_unique_field_names(field_names: Iterator[str],
                                  fields: Iterator[Any],
                                  reserved_names: Mapping[int, str],
