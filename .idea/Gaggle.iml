@@ -7,13 +7,14 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/.pytest_cache" />
-      <excludeFolder url="file://$MODULE_DIR$/dev_files" />
+      <excludeFolder url="file://$MODULE_DIR$/test_files" />
       <excludePattern pattern=".gitignore" />
       <excludePattern pattern=".pylintrc" />
       <excludePattern pattern="poetry.lock" />
       <excludePattern pattern="pyproject.toml" />
       <excludePattern pattern="README.md" />
       <excludePattern pattern="LICENSE" />
+      <excludePattern pattern=".pre-commit-config.yaml" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.11 (Gaggle)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
