@@ -175,22 +175,6 @@ def propagate_warnings_from_generator(
   return decorator
 
 
-@overload
-def _initialise_decks(
-    exported_file: StrOrBytesPath,
-    field_names: Iterable[str] | None = None,
-) -> list[AnkiDeck]:
-  ...
-
-
-@overload
-def _initialise_decks(
-    exported_file: None = None,
-    field_names: None = None,
-) -> list[AnkiDeck]:
-  ...
-
-
 def _initialise_decks(
     exported_file: StrOrBytesPath | None = None,
     field_names: Iterable[str] | None = None,
