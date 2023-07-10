@@ -45,6 +45,48 @@ WRITE_PARAMS: gaggle.OpenOptions = {
 
 
 @pytest_cases.fixture
+@pytest_cases.parametrize_with_cases(
+    'test_card',
+    cases='test_gaggle.cases_ankicard',
+    has_tag=['WellFormedAnkiCard'])
+def well_formed_anki_card_components(test_card):
+  return test_card
+
+
+@pytest_cases.fixture
+def well_formed_anki_card(well_formed_anki_card_components):
+  return well_formed_anki_card_components.card
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize_with_cases(
+    'test_card',
+    cases='test_gaggle.cases_ankicard',
+    has_tag=['FullySpecifiedAnkiCard'])
+def fully_specified_anki_card_components(test_card):
+  return test_card
+
+
+@pytest_cases.fixture
+def fully_specified_anki_card(fully_specified_anki_card_components):
+  return fully_specified_anki_card_components.card
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize_with_cases(
+    'test_card',
+    cases='test_gaggle.cases_ankicard',
+    has_tag=['MinimumAnkiCard'])
+def minimum_anki_card_components(test_card):
+  return test_card
+
+
+@pytest_cases.fixture
+def minimum_anki_card(minimum_anki_card_components):
+  return minimum_anki_card_components.card
+
+
+@pytest_cases.fixture
 def number_of_fields():
   return 10
 
@@ -151,22 +193,6 @@ def test_anki_card_init_generic_arguments(
 
 
 @pytest_cases.fixture
-def anki_card_generic_fully_formed(
-    generic_fields,
-    generic_field_names_remove_reserved,
-    has_html_false,
-    generic_tags_idx,
-    generic_note_type_idx,
-    generic_deck_idx,
-    generic_guid_idx,
-):
-  return gaggle.AnkiCard(generic_fields, generic_field_names_remove_reserved,
-                         has_html_false, generic_tags_idx,
-                         generic_note_type_idx, generic_deck_idx,
-                         generic_guid_idx)
-
-
-@pytest_cases.fixture
 @pytest_cases.parametrize('reserved_name',
                           ['Tags', 'Deck', 'Note Type', 'GUID'])
 def anki_card_reserved_names_field_names(reserved_name):
@@ -189,25 +215,20 @@ def anki_card_reserved_names_property_names(reserved_name):
 @pytest_cases.parametrize('reserved_name',
                           [anki_card_reserved_names_property_names])
 def test_reserved_names_specified_returns_value(
-    anki_card_generic_fully_formed,
+    fully_specified_anki_card,
     reserved_name,
 ):
-  assert hasattr(anki_card_generic_fully_formed, reserved_name)
-
-
-@pytest_cases.fixture
-def anki_card_generic_fields(generic_fields):
-  return gaggle.AnkiCard(generic_fields)
+  assert hasattr(fully_specified_anki_card, reserved_name)
 
 
 @pytest_cases.parametrize('reserved_name',
                           [anki_card_reserved_names_property_names])
 def test_reserved_names_not_specified_raises_key_error(
-    anki_card_generic_fields,
+    minimum_anki_card,
     reserved_name,
 ):
   with pytest.raises(KeyError):
-    hasattr(anki_card_generic_fields, reserved_name)
+    hasattr(minimum_anki_card, reserved_name)
 
 
 @pytest_cases.fixture
@@ -216,40 +237,40 @@ def generic_field_name_string_base():
 
 
 def test_get_field_existing_field(
-    anki_card_generic_fields,
+    minimum_anki_card,
     generic_field_name_string_base,
     generic_guid_idx,
     generic_fields,
 ):
-  assert (anki_card_generic_fields.get_field(
+  assert (minimum_anki_card.get_field(
       f'{generic_field_name_string_base}{generic_guid_idx}') ==
           generic_fields[generic_guid_idx])
 
 
-def test_get_field_non_existing_field(anki_card_generic_fields):
+def test_get_field_non_existing_field(well_formed_anki_card):
   with pytest.raises(KeyError):
-    anki_card_generic_fields.get_field(None)
+    well_formed_anki_card.get_field(None)
 
 
-def test_as_str_list_content_matches(anki_card_generic_fields, generic_fields):
-  test_set = collections.Counter(anki_card_generic_fields.as_str_list())
+def test_as_str_list_content_matches(well_formed_anki_card, generic_fields):
+  test_set = collections.Counter(well_formed_anki_card.as_str_list())
   expected_set = collections.Counter(generic_fields)
   assert test_set == expected_set
 
 
-def test_as_str_list_order_matches(anki_card_generic_fields, generic_fields):
-  assert anki_card_generic_fields.as_str_list() == generic_fields
+def test_as_str_list_order_matches(well_formed_anki_card, generic_fields):
+  assert well_formed_anki_card.as_str_list() == generic_fields
 
 
 def test_write_as_tsv_csv_writer_one_line(
     tmp_path,
-    anki_card_generic_fields,
+    well_formed_anki_card,
     generic_fields,
 ):
   file = tmp_path / 'test_write_as_tsv_csv_writer_one_line.txt'
   with open(file, **WRITE_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    anki_card_generic_fields.write_as_tsv(w)
+    well_formed_anki_card.write_as_tsv(w)
   with open(file, **READ_PARAMS) as f:
     r = csv.reader(f, dialect=TSV_FILE_DIALECT)
     test_card = next(r)
@@ -258,14 +279,14 @@ def test_write_as_tsv_csv_writer_one_line(
 
 def test_write_as_tsv_csv_writer_multiple_lines(
     tmp_path,
-    anki_card_generic_fields,
+    well_formed_anki_card,
     generic_fields,
 ):
   file = tmp_path / 'test_write_as_tsv_csv_writer_multiple_lines.txt'
   with open(file, **WRITE_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    anki_card_generic_fields.write_as_tsv(w)
-    anki_card_generic_fields.write_as_tsv(w)
+    well_formed_anki_card.write_as_tsv(w)
+    well_formed_anki_card.write_as_tsv(w)
   expected_card = generic_fields
   with open(file, **READ_PARAMS) as f:
     r = csv.reader(f, dialect=TSV_FILE_DIALECT)
@@ -274,7 +295,7 @@ def test_write_as_tsv_csv_writer_multiple_lines(
 
 
 def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
-    tmp_path, anki_card_generic_fields):
+    tmp_path, well_formed_anki_card):
   file = tmp_path / ('test_write_as_tsv_no_write_permission_raises_unsupported_'
                      'operation.txt')
   try:
@@ -285,7 +306,7 @@ def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
   with open(file, **READ_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
     with pytest.raises(io.UnsupportedOperation):
-      anki_card_generic_fields.write_as_tsv(w)
+      well_formed_anki_card.write_as_tsv(w)
 
 
 @pytest_cases.parametrize('has_html, expected', [(has_html_false, False),
@@ -337,10 +358,10 @@ def generic_seen_names_set(anki_card_reserved_names):
 
 
 def test_anki_card_reserved_names_matches_fixture(
-    anki_card_generic_fields,
+    well_formed_anki_card,
     anki_card_reserved_names,
 ):
-  assert anki_card_generic_fields._reserved_names == anki_card_reserved_names
+  assert well_formed_anki_card._reserved_names == anki_card_reserved_names
 
 
 @pytest_cases.fixture
