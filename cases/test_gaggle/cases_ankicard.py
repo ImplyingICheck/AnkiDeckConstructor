@@ -90,3 +90,8 @@ class FullySpecifiedWellFormedAnkiCard(MinimumWellFormedAnkiCard):
 @pytest_cases.case(tags=['FullySpecifiedAnkiCard', 'WellFormedAnkiCard'])
 def case_fully_specified_well_formed_anki_card():
   return FullySpecifiedWellFormedAnkiCard()
+
+
+@pytest_cases.case(tags=['MinimumAnkiCard', 'WellFormedAnkiCard'])
+def case_minimum_well_formed_anki_card():
+  return MinimumWellFormedAnkiCard()
