@@ -73,7 +73,7 @@ def new_field_names_generic_with_reserved_names(field_name_prefix: Any,
   return field_names
 
 
-class WellFormedAnkiCard(TestCard):
+class FullySpecifiedWellFormedAnkiCard(TestCard):
   tags_idx = TestCard.number_of_fields - 1
   note_type_idx = 1
   deck_idx = 2
@@ -86,6 +86,6 @@ class WellFormedAnkiCard(TestCard):
       field_name_prefix, TestCard.number_of_fields, reserved_names)
 
 
-@pytest_cases.case(id='WellFormedAnkiCard')
-def new_well_formed_anki_card():
-  return WellFormedAnkiCard()
+@pytest_cases.case(tags=['FullySpecifiedAnkiCard', 'WellFormedAnkiCard'])
+def case_fully_specified_well_formed_anki_card():
+  return FullySpecifiedWellFormedAnkiCard()
