@@ -28,14 +28,14 @@ _GENERIC_FIELD_NAME = 'Field'
 ANKI_CARD_RESERVED_NAMES = ['GUID', 'Note Type', 'Deck', 'Tags']
 
 
-def new_field_values(field_value_prefix, number_of_fields):
+def _new_field_values(field_value_prefix, number_of_fields):
   return [
       f'{field_value_prefix}{field_idx}'
       for field_idx in range(number_of_fields)
   ]
 
 
-class TestCard:
+class MinimumWellFormedAnkiCard:
   number_of_fields = _GENERIC_NUMBER_OF_FIELDS
   field_value_prefix = _GENERIC_FIELD_VALUE
   fields = None
@@ -48,8 +48,8 @@ class TestCard:
 
   def __init__(self):
     if not self.fields:
-      self.fields = new_field_values(self.field_value_prefix,
-                                     self.number_of_fields)
+      self.fields = _new_field_values(self.field_value_prefix,
+                                      self.number_of_fields)
     self.card = gaggle.AnkiCard(
         fields=self.fields,
         field_names=self.field_names,
@@ -61,10 +61,10 @@ class TestCard:
     )
 
 
-def new_field_names_generic_with_reserved_names(field_name_prefix: Any,
-                                                number_of_fields: int,
-                                                reserved_names: Mapping[int,
-                                                                        str]):
+def _new_field_names_generic_with_reserved_names(field_name_prefix: Any,
+                                                 number_of_fields: int,
+                                                 reserved_names: Mapping[int,
+                                                                         str]):
   field_names = [
       f'{field_name_prefix}{field_idx}' for field_idx in range(number_of_fields)
   ]
@@ -73,8 +73,8 @@ def new_field_names_generic_with_reserved_names(field_name_prefix: Any,
   return field_names
 
 
-class FullySpecifiedWellFormedAnkiCard(TestCard):
-  tags_idx = TestCard.number_of_fields - 1
+class FullySpecifiedWellFormedAnkiCard(MinimumWellFormedAnkiCard):
+  tags_idx = MinimumWellFormedAnkiCard.number_of_fields - 1
   note_type_idx = 1
   deck_idx = 2
   guid_idx = 0
@@ -82,8 +82,9 @@ class FullySpecifiedWellFormedAnkiCard(TestCard):
   reserved_names = dict(
       zip([guid_idx, note_type_idx, deck_idx, tags_idx],
           ANKI_CARD_RESERVED_NAMES))
-  field_names = new_field_names_generic_with_reserved_names(
-      field_name_prefix, TestCard.number_of_fields, reserved_names)
+  field_names = _new_field_names_generic_with_reserved_names(
+      field_name_prefix, MinimumWellFormedAnkiCard.number_of_fields,
+      reserved_names)
 
 
 @pytest_cases.case(tags=['FullySpecifiedAnkiCard', 'WellFormedAnkiCard'])
