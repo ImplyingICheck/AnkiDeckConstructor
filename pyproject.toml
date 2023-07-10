@@ -38,7 +38,7 @@ pytest-mock = "^3.11.1"
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
-pythonpath = "src"
+pythonpath = "src cases"
 
 [tool.yapfignore]
 ignore_patterns = [
