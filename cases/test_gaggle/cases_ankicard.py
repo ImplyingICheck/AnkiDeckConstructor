@@ -74,17 +74,22 @@ def _new_field_names_generic_with_reserved_names(field_name_prefix: Any,
 
 
 class FullySpecifiedWellFormedAnkiCard(MinimumWellFormedAnkiCard):
-  tags_idx = MinimumWellFormedAnkiCard.number_of_fields - 1
   note_type_idx = 1
   deck_idx = 2
   guid_idx = 0
   field_name_prefix = _GENERIC_FIELD_NAME
-  reserved_names = dict(
-      zip([guid_idx, note_type_idx, deck_idx, tags_idx],
-          ANKI_CARD_RESERVED_NAMES))
-  field_names = _new_field_names_generic_with_reserved_names(
-      field_name_prefix, MinimumWellFormedAnkiCard.number_of_fields,
-      reserved_names)
+
+  def __init__(self):
+    self.tags_idx = self.number_of_fields - 1
+    assert self.tags_idx not in {
+        self.note_type_idx, self.deck_idx, self.guid_idx
+    }, 'Values defined by AnkiHeader overlap.'
+    self.reserved_names = dict(
+        zip([self.guid_idx, self.note_type_idx, self.deck_idx, self.tags_idx],
+            ANKI_CARD_RESERVED_NAMES))
+    self.field_names = _new_field_names_generic_with_reserved_names(
+        self.field_name_prefix, self.number_of_fields, self.reserved_names)
+    super().__init__()
 
 
 @pytest_cases.case(tags=['FullySpecifiedAnkiCard', 'WellFormedAnkiCard'])
@@ -95,3 +100,11 @@ def case_fully_specified_well_formed_anki_card():
 @pytest_cases.case(tags=['MinimumAnkiCard', 'WellFormedAnkiCard'])
 def case_minimum_well_formed_anki_card():
   return MinimumWellFormedAnkiCard()
+
+
+class ModifiedFullySpecifiedAnkiCard(FullySpecifiedWellFormedAnkiCard):
+
+  def __init__(self, *, field_names=None):
+    if field_names:
+      self.field_names = field_names
+    super().__init__()
