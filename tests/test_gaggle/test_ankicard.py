@@ -27,11 +27,16 @@ import warnings
 from typing import cast
 
 import pytest
-import pytest_cases
+import pytest_cases.filters
+# pytest_cases.fixture used as helper functions. Must be imported otherwise, the
+# function is not discovered during test collection.
+from test_gaggle.case_ankicard import fully_specified_well_formed_values  # pylint: disable=unused-import # pyright: ignore [reportMissingImports]
 from .conftest import new_header_gaggle_format, new_field_names_remove_reserved  # pylint: disable=relative-beyond-top-level
 
 from gaggle import gaggle
 from gaggle import exceptions
+
+_CASES = 'test_gaggle.case_ankicard'
 
 TSV_FILE_ENCODING = gaggle._ANKI_EXPORT_ENCODING
 TSV_FILE_DIALECT = gaggle._ANKI_EXPORT_CONTENT_DIALECT
@@ -46,44 +51,49 @@ WRITE_PARAMS: gaggle.OpenOptions = {
 
 @pytest_cases.fixture
 @pytest_cases.parametrize_with_cases(
-    'test_card',
-    cases='test_gaggle.cases_ankicard',
-    has_tag=['WellFormedAnkiCard'])
+    'test_card', cases=_CASES, has_tag=['WellFormedAnkiCard'])
 def well_formed_anki_card_components(test_card):
   return test_card
 
 
 @pytest_cases.fixture
 def well_formed_anki_card(well_formed_anki_card_components):
-  return well_formed_anki_card_components.card
+  return well_formed_anki_card_components.new_anki_card()
 
 
 @pytest_cases.fixture
 @pytest_cases.parametrize_with_cases(
-    'test_card',
-    cases='test_gaggle.cases_ankicard',
-    has_tag=['FullySpecifiedAnkiCard'])
+    'test_card', cases=_CASES, has_tag=['FullySpecifiedAnkiCard'])
 def fully_specified_anki_card_components(test_card):
   return test_card
 
 
 @pytest_cases.fixture
 def fully_specified_anki_card(fully_specified_anki_card_components):
-  return fully_specified_anki_card_components.card
+  return fully_specified_anki_card_components.new_anki_card()
 
 
 @pytest_cases.fixture
 @pytest_cases.parametrize_with_cases(
-    'test_card',
-    cases='test_gaggle.cases_ankicard',
-    has_tag=['MinimumAnkiCard'])
+    'test_card', cases=_CASES, has_tag=['MinimumAnkiCard'])
 def minimum_anki_card_components(test_card):
   return test_card
 
 
 @pytest_cases.fixture
+@pytest_cases.parametrize_with_cases(
+    'test_card', cases=_CASES, has_tag=['ModifiedFullySpecifiedAnkiCard'])
+def modified_fully_specified_anki_card_components(test_card):
+
+  def modified_card(field_names):
+    return test_card(field_names=field_names)
+
+  return modified_card
+
+
+@pytest_cases.fixture
 def minimum_anki_card(minimum_anki_card_components):
-  return minimum_anki_card_components.card
+  return minimum_anki_card_components.new_anki_card()
 
 
 @pytest_cases.fixture
@@ -365,201 +375,196 @@ def test_anki_card_reserved_names_matches_fixture(
 
 
 @pytest_cases.fixture
-def generic_unique_field_names_constructor(
-    generic_field_names_remove_reserved,
-    generic_fields,
-    generic_indexes_reserved_names_mapping,
-    generic_seen_names_set,
-):
+def generate_unique_field_names_constructor(
+    modified_fully_specified_anki_card_components):
 
-  def generate_unique_field_names(
-      *,
-      field_names=generic_field_names_remove_reserved,
-      fields=generic_fields,
-      indexes_reserved_names_mapping=generic_indexes_reserved_names_mapping,
-      seen_names_set=generic_seen_names_set,
-  ):
+  def generate_unique_field_names_helper(field_names=None):
+    card_values = modified_fully_specified_anki_card_components(
+        field_names=field_names)
     return list(
-        gaggle._generate_unique_field_names(field_names, fields,
-                                            indexes_reserved_names_mapping,
-                                            seen_names_set))
+        gaggle._generate_unique_field_names(
+            card_values.field_names,
+            card_values.fields, card_values.reserved_names,
+            set(card_values.reserved_names.values())))
 
-  return generate_unique_field_names
+  return generate_unique_field_names_helper
 
 
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+    prefix='field_names')
 def test_generate_unique_field_names_replaces_field_names(
-    generic_unique_field_names_constructor,
-    generic_field_names_add_reserved,
-):
-  expected_field_names = generic_field_names_add_reserved
-  assert generic_unique_field_names_constructor() == expected_field_names
+    field_names, generate_unique_field_names_constructor,
+    fully_specified_anki_card_components):
+  expected = fully_specified_anki_card_components
+  test_field_names = generate_unique_field_names_constructor(field_names)
+  assert test_field_names == expected.field_names
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names', cases=_CASES, has_tag=['Well-Formed'], prefix='field_names')
 def test_generate_unique_field_names_well_formed_no_warnings(
-    generic_unique_field_names_constructor,):
+    field_names,
+    generate_unique_field_names_constructor,
+):
   with warnings.catch_warnings():
     warnings.simplefilter('error')
-    generic_unique_field_names_constructor()
+    generate_unique_field_names_constructor(field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
 def test_generate_unique_field_names_longer_field_names_raises_leftover_argument_warning(
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  extended_field_names = generic_field_names_remove_reserved
-  extended_field_names.append('This extends field_names by one.')
   with pytest.warns(exceptions.LeftoverArgumentWarning):
-    generic_unique_field_names_constructor(field_names=extended_field_names)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
 def test_generate_unique_field_names_longer_field_names_multiple_extra_raises_one_warning(
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  extended_field_names = generic_field_names_remove_reserved
-  extra_field_names = [
-      'This extends field_names by one.', 'This extends field_names by two.'
-  ]
-  extended_field_names.append(extra_field_names[0])
-  extended_field_names.append(extra_field_names[1])
   with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
-    generic_unique_field_names_constructor(field_names=extended_field_names)
+    generate_unique_field_names_constructor(field_names=field_names)
   assert len(record) == 1
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
 def test_generate_unique_field_names_longer_field_names_multiple_extra_returns_all_extra(
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
-):
-  extended_field_names = generic_field_names_remove_reserved
-  extra_field_names = [
-      'This extends field_names by one.', 'This extends field_names by two.'
-  ]
-  extended_field_names.append(extra_field_names[0])
-  extended_field_names.append(extra_field_names[1])
+    field_names, generate_unique_field_names_constructor,
+    fully_specified_anki_card_components):
+  surplus_starting_index = len(fully_specified_anki_card_components.field_names)
   with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
-    generic_unique_field_names_constructor(field_names=extended_field_names)
+    generate_unique_field_names_constructor(field_names=field_names)
   warning = record[0].message
   warning = cast(exceptions.LeftoverArgumentWarning, warning)
   actual_extra_field_names = warning.leftovers
-  expected_extra_field_names = ' '.join(extra_field_names)
+  expected_extra_field_names = ' '.join(field_names[surplus_starting_index:])
   assert actual_extra_field_names == expected_extra_field_names
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['HeaderNameMismatch'],
+    prefix='field_names')
 def test_generate_unique_field_names_mismatched_reserved_name_raises_header_field_name_mismatch_warning(
-    generic_field_names_remove_reserved,
-    generic_unique_field_names_constructor,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  mimatched_reserved_name = generic_field_names_remove_reserved
-  mimatched_reserved_name[0] = 'This is not a field name assigned by the header'
   with pytest.warns(exceptions.HeaderFieldNameMismatchWarning):
-    generic_unique_field_names_constructor(field_names=mimatched_reserved_name)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['HeaderNameMismatch'],
+    prefix='field_names')
 def test_generate_unique_field_names_multiple_mismatched_reserved_name_raises_multiple_header_field_name_mismatch_warning(
-    generic_field_names_remove_reserved,
-    generic_unique_field_names_constructor,
+    field_names,
+    generate_unique_field_names_constructor,
+    fully_specified_anki_card_components,
 ):
-  mimatched_reserved_name = generic_field_names_remove_reserved
-  mimatched_reserved_name[0] = 'This is not a field name assigned by the header'
-  mimatched_reserved_name[1] = 'Also not a field name assigned by the header'
+  number_mismatches = len(
+      set(fully_specified_anki_card_components.field_names) - set(field_names))
   with pytest.warns(exceptions.HeaderFieldNameMismatchWarning) as record:
-    generic_unique_field_names_constructor(field_names=mimatched_reserved_name)
-  assert len(record) == 2
+    generate_unique_field_names_constructor(field_names=field_names)
+  assert len(record) == number_mismatches
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['DuplicateReservedFieldNames', 'GenericFieldNameOverwritten'],
+    prefix='field_names')
 def test_generate_unique_field_names_duplicate_reserved_name_raises_duplicate_warning(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_add_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  duplicate_reserved_name = generic_field_names_add_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicate_reserved_name[
-      first_index_with_default_field_name] = duplicate_reserved_name[0]
   with pytest.warns(exceptions.DuplicateWarning):
-    generic_unique_field_names_constructor(field_names=duplicate_reserved_name)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['DuplicateReservedFieldNames', 'GenericFieldNameOverwritten'],
+    prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_reserved_name_raises_multiple_duplicate_warning(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_add_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
+    fully_specified_anki_card_components,
 ):
-  duplicate_reserved_name = generic_field_names_add_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicate_reserved_name[
-      first_index_with_default_field_name] = duplicate_reserved_name[0]
-  duplicate_reserved_name[first_index_with_default_field_name +
-                          1] = duplicate_reserved_name[0]
+  number_duplicate = len(
+      fully_specified_anki_card_components.field_names) - len(set(field_names))
   with pytest.warns(exceptions.DuplicateWarning) as record:
-    generic_unique_field_names_constructor(field_names=duplicate_reserved_name)
-  assert len(record) == 2
+    generate_unique_field_names_constructor(field_names=field_names)
+  assert len(record) == number_duplicate
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['GenericFieldNameOverwritten', 'UsageAfterAssignment'],
+    prefix='field_names')
 def test_generate_unique_field_names_duplicate_default_name_after_assignment_raises_duplicate_warning(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  duplicate_default_name = generic_field_names_remove_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicated_field_name = duplicate_default_name[
-      first_index_with_default_field_name]
-  duplicate_default_name[first_index_with_default_field_name +
-                         1] = duplicated_field_name
   with pytest.warns(exceptions.DuplicateWarning):
-    generic_unique_field_names_constructor(field_names=duplicate_default_name)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['GenericFieldNameOverwritten', 'UsageAfterAssignment'],
+    prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_default_name_after_assignment_raises_multiple_duplicate_warning(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
+    fully_specified_anki_card_components,
 ):
-  duplicate_default_name = generic_field_names_remove_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicated_field_name = duplicate_default_name[
-      first_index_with_default_field_name]
-  duplicate_default_name[first_index_with_default_field_name +
-                         1] = duplicated_field_name
-  duplicate_default_name[first_index_with_default_field_name +
-                         2] = duplicated_field_name
+  number_duplicate = len(
+      fully_specified_anki_card_components.field_names) - len(set(field_names))
   with pytest.warns(exceptions.DuplicateWarning) as record:
-    generic_unique_field_names_constructor(field_names=duplicate_default_name)
-  assert len(record) == 2
+    generate_unique_field_names_constructor(field_names=field_names)
+  assert len(record) == number_duplicate
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['GenericFieldNameOverwritten', 'UsageBeforeAssignment'],
+    prefix='field_names')
 def test_generate_unique_field_names_duplicate_default_name_before_assignment_raises_value_error(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  duplicate_default_name = generic_field_names_remove_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicated_field_name = duplicate_default_name[
-      first_index_with_default_field_name + 1]
-  duplicate_default_name[
-      first_index_with_default_field_name] = duplicated_field_name
   with pytest.raises(ValueError):
-    generic_unique_field_names_constructor(field_names=duplicate_default_name)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    has_tag=['GenericFieldNameOverwritten', 'UsageBeforeAssignment'],
+    prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_default_name_before_assignment_raises_single_value_error(
-    generic_deck_idx,
-    generic_unique_field_names_constructor,
-    generic_field_names_remove_reserved,
+    field_names,
+    generate_unique_field_names_constructor,
 ):
-  duplicate_default_name = generic_field_names_remove_reserved
-  first_index_with_default_field_name = generic_deck_idx + 1
-  duplicated_field_name = duplicate_default_name[
-      first_index_with_default_field_name + 2]
-  duplicate_default_name[
-      first_index_with_default_field_name] = duplicated_field_name
-  duplicate_default_name[first_index_with_default_field_name +
-                         1] = duplicated_field_name
   with pytest.raises(ValueError):
-    generic_unique_field_names_constructor(field_names=duplicate_default_name)
+    generate_unique_field_names_constructor(field_names=field_names)
 
 
 @pytest_cases.parametrize('field_names',
