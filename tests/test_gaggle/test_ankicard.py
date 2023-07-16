@@ -82,7 +82,9 @@ def minimum_anki_card_components(test_card):
 
 @pytest_cases.fixture
 @pytest_cases.parametrize_with_cases(
-    'test_card', cases=_CASES, has_tag=['ModifiedFullySpecifiedAnkiCard'])
+    'test_card',
+    cases=_CASES,
+    has_tag=['ModifiedFullySpecifiedAnkiCard', 'Constructor'])
 def modified_fully_specified_anki_card_components(test_card):
 
   def modified_card(field_names):
