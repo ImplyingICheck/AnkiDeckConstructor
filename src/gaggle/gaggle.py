@@ -892,16 +892,24 @@ def _generate_field_dict(
   Args:
     field_names: Names used for referencing values stored in the field dict.
     Special properties exist for fields named by the header.
-    Must match the length of fields.
     fields: The values to be stored in an AnkiCard.
 
   Returns:
     Named values whose iteration order is the same as read from file.
 
   Raises:
-    ValueError: If field_names and fields are not of matching length.
+    ValueError: If an index-bound default name is reserved before a field would
+      have used that name. For example, naming Field0 "Field2" and then having
+      no field name specified for Field2.
+    DuplicateWarning: Raised in two situations. If field_names contains a name
+      specified by reserved_names. If field_names contains a duplicate value.
+    LeftoverArgumentWarning: If field_names contains more values than fields
+    HeaderFieldNameMismatchWarning: If field_names contains a non-empty string
+      which contradicts a value specified by indexes_reserved_names. Takes
+      precedence over DuplicateWarning when both apply.
   """
-  field_names = iter(field_names)
+  field_names = _generate_unique_field_names(field_names, fields,
+                                             indexes_reserved_names, seen_names)
   fields = iter(fields)
   name_field_tuples = zip(field_names, fields, strict=True)
   return collections.OrderedDict(name_field_tuples)
@@ -962,7 +970,6 @@ class AnkiCard:
     }
     reserved_name_set = set(AnkiCard._reserved_names)
     self.fields: collections.OrderedDict[str, str] = _generate_field_dict(
-
         field_names, fields, reserved_names, reserved_name_set)
 
   @property
