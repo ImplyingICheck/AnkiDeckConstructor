@@ -882,9 +882,11 @@ def _generate_unique_field_names(field_names: Iterator[str] | Iterable[str],
 
 
 def _generate_field_dict(
-    field_names: Iterator[_T] | Iterable[_T],
+    field_names: Iterator[str] | Iterable[str],
     fields: Iterator[_S] | Iterable[_S],
-) -> collections.OrderedDict[_T, _S]:
+    indexes_reserved_names: Mapping[int, str],
+    seen_names: set[str],
+) -> collections.OrderedDict[str, _S]:
   """Create a dictionary mapping given names to a value in AnkiCard.
 
   Args:
@@ -959,11 +961,9 @@ class AnkiCard:
         if index is not None
     }
     reserved_name_set = set(AnkiCard._reserved_names)
-    field_names = _generate_unique_field_names(field_names, fields,
-                                               reserved_names,
-                                               reserved_name_set)
     self.fields: collections.OrderedDict[str, str] = _generate_field_dict(
-        field_names, fields)
+
+        field_names, fields, reserved_names, reserved_name_set)
 
   @property
   def tags(self) -> str:
