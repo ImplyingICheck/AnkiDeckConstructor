@@ -164,3 +164,25 @@ def case_anki_export_file_well_formed_header_no_content():
   hash_value = b'\xf1\\\x966(\x80\x9c\x86>d\x0c\xb8\x94\xf3\x9c\xc4'
   return make_read_only_test_file(
       header, content, filename=filename, hash_value=hash_value)
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(
+    'value', [None, '', False, 0, ()],
+    ids=['None', 'empty_string', 'False', '0', 'empty_tuple'])
+def falsy_values_hashable(value):
+  return value
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(
+    'value', [{}, [], set()], ids=['empty_dict', 'empty_list', 'empty_set'])
+def falsy_values_unhashable(value):
+  return value
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize('value',
+                          [falsy_values_hashable, falsy_values_unhashable])
+def falsy_values(value):
+  return value

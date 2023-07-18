@@ -30,8 +30,8 @@ import pytest
 import pytest_cases.filters
 # pytest_cases.fixture used as helper functions. Must be imported otherwise, the
 # function is not discovered during test collection.
-from test_gaggle.case_ankicard import fully_specified_well_formed_values  # pylint: disable=unused-import # pyright: ignore [reportMissingImports]
-from .conftest import new_header_gaggle_format, new_field_names_remove_reserved  # pylint: disable=relative-beyond-top-level
+from test_gaggle.case_ankicard import *  # pylint: disable=wildcard-import,unused-wildcard-import # pyright: ignore [reportMissingImports]
+from .conftest import new_header_gaggle_format, new_field_names_remove_reserved, falsy_values_hashable  # pylint: disable=relative-beyond-top-level
 
 from gaggle import gaggle
 from gaggle import exceptions
@@ -50,146 +50,101 @@ WRITE_PARAMS: gaggle.OpenOptions = {
 
 
 @pytest_cases.fixture
-@pytest_cases.parametrize_with_cases(
-    'test_card', cases=_CASES, has_tag=['WellFormedAnkiCard'])
-def well_formed_anki_card_components(test_card):
-  return test_card
+@pytest_cases.parametrize('property_name', [
+    'guid',
+    'note_type',
+    'deck_name',
+    'tags',
+])
+def reserved_names_as_property_name(property_name):
+  return property_name
 
 
 @pytest_cases.fixture
-def well_formed_anki_card(well_formed_anki_card_components):
-  return well_formed_anki_card_components.new_anki_card()
-
-
-@pytest_cases.fixture
-@pytest_cases.parametrize_with_cases(
-    'test_card', cases=_CASES, has_tag=['FullySpecifiedAnkiCard'])
-def fully_specified_anki_card_components(test_card):
-  return test_card
-
-
-@pytest_cases.fixture
-def fully_specified_anki_card(fully_specified_anki_card_components):
-  return fully_specified_anki_card_components.new_anki_card()
+@pytest_cases.parametrize(
+    'field_name', [falsy_values_hashable, 'This field name does not exist'])
+def nonexistent_field_names(field_name):
+  return field_name
 
 
 @pytest_cases.fixture
 @pytest_cases.parametrize_with_cases(
-    'test_card', cases=_CASES, has_tag=['MinimumAnkiCard'])
-def minimum_anki_card_components(test_card):
-  return test_card
-
-
-@pytest_cases.fixture
-@pytest_cases.parametrize_with_cases(
-    'test_card',
+    'anki_card_components',
     cases=_CASES,
-    has_tag=['ModifiedFullySpecifiedAnkiCard', 'Constructor'])
-def modified_fully_specified_anki_card_components(test_card):
-
-  def modified_card(field_names):
-    return test_card(field_names=field_names)
-
-  return modified_card
-
-
-@pytest_cases.fixture
-def minimum_anki_card(minimum_anki_card_components):
-  return minimum_anki_card_components.new_anki_card()
+    has_tag=['WellFormed', 'AnkiCardComponents'])
+def generate_field_dict_well_formed(anki_card_components):
+  generated_field_dict = gaggle._generate_field_dict(
+      anki_card_components.field_names, anki_card_components.fields,
+      anki_card_components.reserved_names,
+      set(anki_card_components.reserved_names.values()))
+  components = anki_card_components
+  return generated_field_dict, components
 
 
 @pytest_cases.fixture
-def number_of_fields():
-  return 10
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components_constructor',
+    cases=_CASES,
+    has_tag=['AnkiCardComponentsConstructor'])
+def generate_unique_field_names_constructor(anki_card_components_constructor,):
+
+  def generate_unique_field_names_helper(field_names=None):
+    anki_card_components = anki_card_components_constructor(
+        field_names=field_names)
+    return list(
+        gaggle._generate_unique_field_names(
+            anki_card_components.field_names, anki_card_components.fields,
+            anki_card_components.reserved_names,
+            set(anki_card_components.reserved_names.values()))
+    ), anki_card_components.expected_field_names
+
+  return generate_unique_field_names_helper
 
 
-@pytest_cases.fixture
-def generic_fields(number_of_fields):
-  return [f'value{field_idx}' for field_idx in range(number_of_fields)]
-
-
-@pytest_cases.fixture
-def anki_card_reserved_names():
-  return ['Tags', 'Deck', 'Note Type', 'GUID']
-
-
-@pytest_cases.fixture
-def generic_indexes_reserved_names_mapping(
-    generic_tags_idx,
-    generic_deck_idx,
-    generic_note_type_idx,
-    generic_guid_idx,
-    anki_card_reserved_names,
-):
-  indexes = [
-      generic_tags_idx, generic_deck_idx, generic_note_type_idx,
-      generic_guid_idx
-  ]
-  return dict(zip(indexes, anki_card_reserved_names))
-
-
-@pytest_cases.fixture
-def generic_field_names(number_of_fields):
-  field_names = [f'Field{field_idx}' for field_idx in range(number_of_fields)]
-  return field_names
-
-
-@pytest_cases.fixture
-def generic_field_names_remove_reserved(generic_field_names,
-                                        generic_indexes_reserved_names_mapping):
-  field_names = generic_field_names
-  for index in generic_indexes_reserved_names_mapping.keys():
-    field_names[index] = ''
-  return field_names
-
-
-@pytest_cases.fixture
-def generic_field_names_add_reserved(generic_field_names,
-                                     generic_indexes_reserved_names_mapping):
-  field_names = generic_field_names
-  for index, reserved_name in generic_indexes_reserved_names_mapping.items():
-    field_names[index] = reserved_name
-  return field_names
-
-
-@pytest_cases.fixture
-def has_html_true():
-  return 'true'
-
-
-@pytest_cases.fixture
-def has_html_false():
-  return 'false'
-
-
-@pytest_cases.fixture
-def generic_tags_idx(number_of_fields):
-  return number_of_fields - 1
-
-
-@pytest_cases.fixture
-def generic_note_type_idx():
-  return 1
-
-
-@pytest_cases.fixture
-def generic_deck_idx():
-  return 2
-
-
-@pytest_cases.fixture
-def generic_guid_idx():
-  return 0
-
-
-@pytest_cases.parametrize('fields', [generic_fields])
-@pytest_cases.parametrize('field_names',
-                          [None, generic_field_names_remove_reserved])
-@pytest_cases.parametrize('has_html', [has_html_false, has_html_true])
-@pytest_cases.parametrize('tags_idx', [None, generic_tags_idx])
-@pytest_cases.parametrize('note_type_idx', [None, generic_note_type_idx])
-@pytest_cases.parametrize('deck_idx', [None, generic_deck_idx])
-@pytest_cases.parametrize('guid_idx', [None, generic_guid_idx])
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'fields',
+    cases=_CASES,
+    has_tag=['Fields'],
+    prefix='fields',
+)
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    filter=pytest_cases.filters.has_tag('FieldNames')
+    & ~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+    prefix='field_names',
+)
+@pytest_cases.parametrize_with_cases(
+    'has_html',
+    cases=_CASES,
+    has_tag=['HasHtml', 'Well-Formed'],
+    prefix='has_html',
+)
+@pytest_cases.parametrize_with_cases(
+    'tags_idx',
+    cases=_CASES,
+    has_tag=['TagsIdx'],
+    prefix='tags_idx',
+)
+@pytest_cases.parametrize_with_cases(
+    'note_type_idx',
+    cases=_CASES,
+    has_tag=['NoteTypeIdx'],
+    prefix='note_type_idx',
+)
+@pytest_cases.parametrize_with_cases(
+    'deck_idx',
+    cases=_CASES,
+    has_tag=['GuidIdx'],
+    prefix='guid_idx',
+)
+@pytest_cases.parametrize_with_cases(
+    'guid_idx',
+    cases=_CASES,
+    has_tag=['DeckIdx'],
+    prefix='deck_idx',
+)
 def test_anki_card_init_generic_arguments(
     fields,
     field_names,
@@ -204,110 +159,119 @@ def test_anki_card_init_generic_arguments(
   assert card
 
 
-@pytest_cases.fixture
-@pytest_cases.parametrize('reserved_name',
-                          ['Tags', 'Deck', 'Note Type', 'GUID'])
-def anki_card_reserved_names_field_names(reserved_name):
-  """These names are guaranteed by the public API. They cannot be assigned
-  manually (passed as field_names), cannot be duplicated (used in field_names
-  and specified by argument), and each is accessible as a property."""
-  return reserved_name
-
-
-@pytest_cases.fixture
-@pytest_cases.parametrize('reserved_name',
-                          ['tags', 'deck_name', 'note_type', 'guid'])
-def anki_card_reserved_names_property_names(reserved_name):
-  """These names are guaranteed by the public API. They cannot be assigned
-  manually (passed as field_names), cannot be duplicated (used in field_names
-  and specified by argument), and each is accessible as a property."""
-  return reserved_name
-
-
-@pytest_cases.parametrize('reserved_name',
-                          [anki_card_reserved_names_property_names])
+@pytest_cases.parametrize_with_cases(
+    'anki_card', cases=_CASES, has_tag=['FullySpecified', 'AnkiCard'])
 def test_reserved_names_specified_returns_value(
-    fully_specified_anki_card,
-    reserved_name,
+    anki_card,
+    reserved_names_as_property_name,
 ):
-  assert hasattr(fully_specified_anki_card, reserved_name)
+  assert hasattr(anki_card, reserved_names_as_property_name)
 
 
-@pytest_cases.parametrize('reserved_name',
-                          [anki_card_reserved_names_property_names])
+@pytest_cases.parametrize_with_cases(
+    'anki_card', cases=_CASES, has_tag=['Minimum', 'AnkiCard'])
 def test_reserved_names_not_specified_raises_key_error(
-    minimum_anki_card,
-    reserved_name,
+    anki_card,
+    reserved_names_as_property_name,
 ):
   with pytest.raises(KeyError):
-    hasattr(minimum_anki_card, reserved_name)
+    hasattr(anki_card, reserved_names_as_property_name)
 
 
-@pytest_cases.fixture
-def generic_field_name_string_base():
-  return 'Field'
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
+def test_get_field_existing_field(anki_card_components,):
+  anki_card = anki_card_components.new_anki_card()
+  for expected_field_name, expected_field_value in zip(
+      anki_card_components.expected_field_names,
+      anki_card_components.fields,
+      strict=True,
+  ):
+    assert anki_card.get_field(expected_field_name) == expected_field_value
 
 
-def test_get_field_existing_field(
-    minimum_anki_card,
-    generic_field_name_string_base,
-    generic_guid_idx,
-    generic_fields,
-):
-  assert (minimum_anki_card.get_field(
-      f'{generic_field_name_string_base}{generic_guid_idx}') ==
-          generic_fields[generic_guid_idx])
-
-
-def test_get_field_non_existing_field(well_formed_anki_card):
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'anki_card', cases=_CASES, has_tag=['WellFormed', 'AnkiCard'])
+def test_get_field_non_existing_field(anki_card, nonexistent_field_names):
   with pytest.raises(KeyError):
-    well_formed_anki_card.get_field(None)
+    anki_card.get_field(nonexistent_field_names)
 
 
-def test_as_str_list_content_matches(well_formed_anki_card, generic_fields):
-  test_set = collections.Counter(well_formed_anki_card.as_str_list())
-  expected_set = collections.Counter(generic_fields)
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
+def test_as_str_list_content_matches(anki_card_components):
+  anki_card = anki_card_components.new_anki_card()
+  test_set = collections.Counter(anki_card.as_str_list())
+  expected_set = collections.Counter(anki_card_components.expected_fields)
   assert test_set == expected_set
 
 
-def test_as_str_list_order_matches(well_formed_anki_card, generic_fields):
-  assert well_formed_anki_card.as_str_list() == generic_fields
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
+def test_as_str_list_order_matches(anki_card_components):
+  anki_card = anki_card_components.new_anki_card()
+  expected_fields = anki_card_components.expected_fields
+  assert anki_card.as_str_list() == expected_fields
 
 
+# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
 def test_write_as_tsv_csv_writer_one_line(
     tmp_path,
-    well_formed_anki_card,
-    generic_fields,
+    anki_card_components,
 ):
   file = tmp_path / 'test_write_as_tsv_csv_writer_one_line.txt'
+  anki_card = anki_card_components.new_anki_card()
+  expected_write_output = anki_card_components.expected_fields
   with open(file, **WRITE_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    well_formed_anki_card.write_as_tsv(w)
+    anki_card.write_as_tsv(w)
   with open(file, **READ_PARAMS) as f:
     r = csv.reader(f, dialect=TSV_FILE_DIALECT)
     test_card = next(r)
-    assert test_card == generic_fields
+    assert test_card == expected_write_output
 
 
+# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
 def test_write_as_tsv_csv_writer_multiple_lines(
     tmp_path,
-    well_formed_anki_card,
-    generic_fields,
+    anki_card_components,
 ):
   file = tmp_path / 'test_write_as_tsv_csv_writer_multiple_lines.txt'
+  anki_card = anki_card_components.new_anki_card()
+  expected_write_output = anki_card_components.expected_fields
   with open(file, **WRITE_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    well_formed_anki_card.write_as_tsv(w)
-    well_formed_anki_card.write_as_tsv(w)
-  expected_card = generic_fields
+    anki_card.write_as_tsv(w)
+    anki_card.write_as_tsv(w)
   with open(file, **READ_PARAMS) as f:
     r = csv.reader(f, dialect=TSV_FILE_DIALECT)
     for test_card in r:
-      assert test_card == expected_card
+      assert test_card == expected_write_output
 
 
+# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+@pytest_cases.parametrize_with_cases(
+    'anki_card', cases=_CASES, has_tag=['WellFormed', 'AnkiCard'])
 def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
-    tmp_path, well_formed_anki_card):
+    tmp_path, anki_card):
   file = tmp_path / ('test_write_as_tsv_no_write_permission_raises_unsupported_'
                      'operation.txt')
   try:
@@ -318,78 +282,62 @@ def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
   with open(file, **READ_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
     with pytest.raises(io.UnsupportedOperation):
-      well_formed_anki_card.write_as_tsv(w)
+      anki_card.write_as_tsv(w)
 
 
-@pytest_cases.parametrize('has_html, expected', [(has_html_false, False),
-                                                 (has_html_true, True)])
-def test_parse_anki_header_bool_valid_input(has_html, expected):
-  assert gaggle._parse_anki_header_bool(has_html) == expected
+def has_html_expected_bool(has_html_as_string):
+  if has_html_as_string == 'true':
+    return True
+  elif has_html_as_string == 'false':
+    return False
+  else:
+    raise ValueError
 
 
-def test_parse_anki_header_bool_invalid_value_raises_value_error():
+@pytest_cases.parametrize_with_cases(
+    'has_html',
+    cases=_CASES,
+    has_tag=['HasHtml', 'Well-Formed'],
+    prefix='has_html')
+def test_parse_anki_header_bool_valid_input(has_html):
+  expected_bool = has_html_expected_bool(has_html)
+  assert gaggle._parse_anki_header_bool(has_html) == expected_bool
+
+
+@pytest_cases.parametrize_with_cases(
+    'has_html',
+    cases=_CASES,
+    has_tag=['HasHtml', 'Malformed'],
+    prefix='has_html')
+def test_parse_anki_header_bool_invalid_value_raises_value_error(has_html):
   with pytest.raises(ValueError):
-    gaggle._parse_anki_header_bool('')
+    gaggle._parse_anki_header_bool(has_html)
 
 
-@pytest_cases.fixture
-def generic_field_dict(generic_field_names, generic_fields):
-  test = gaggle._generate_field_dict(generic_field_names, generic_fields)
-  return test
+@pytest.mark.filterwarnings('ignore')
+def test_generate_field_dict_returns_ordered_dict(
+    generate_field_dict_well_formed,):
+  field_dict, anki_card_components = generate_field_dict_well_formed
+  del anki_card_components  # Unused
+  assert isinstance(field_dict, collections.OrderedDict)
 
 
-def test_generate_field_dict_returns_ordered_dict(generic_field_dict):
-  assert isinstance(generic_field_dict, collections.OrderedDict)
-
-
-def test_generate_field_dict_preserves_order_field_values(
-    generic_field_dict, generic_fields):
-  for test_value, expected_value in zip(generic_field_dict.values(),
-                                        generic_fields):
+@pytest.mark.filterwarnings('ignore')
+def test_generate_field_dict_preserves_order_fields(
+    generate_field_dict_well_formed,):
+  field_dict, anki_card_components = generate_field_dict_well_formed
+  expected_values = anki_card_components.expected_fields
+  for test_value, expected_value in zip(field_dict.values(), expected_values):
     assert test_value == expected_value
 
 
+@pytest.mark.filterwarnings('ignore')
 def test_generate_field_dict_preserves_order_field_names(
-    generic_field_dict, generic_field_names):
-  for test_value, expected_value in zip(generic_field_dict.keys(),
-                                        generic_field_names):
-    assert test_value == expected_value
-
-
-def test_generate_field_dict_mismatched_length_raises_value_error(
-    generic_field_names_remove_reserved, generic_fields):
-  generic_fields.append('Extend Values By One')
-  with pytest.raises(ValueError):
-    gaggle._generate_field_dict(generic_field_names_remove_reserved,
-                                generic_fields)
-
-
-@pytest_cases.fixture
-def generic_seen_names_set(anki_card_reserved_names):
-  return set(anki_card_reserved_names)
-
-
-def test_anki_card_reserved_names_matches_fixture(
-    well_formed_anki_card,
-    anki_card_reserved_names,
-):
-  assert well_formed_anki_card._reserved_names == anki_card_reserved_names
-
-
-@pytest_cases.fixture
-def generate_unique_field_names_constructor(
-    modified_fully_specified_anki_card_components):
-
-  def generate_unique_field_names_helper(field_names=None):
-    card_values = modified_fully_specified_anki_card_components(
-        field_names=field_names)
-    return list(
-        gaggle._generate_unique_field_names(
-            card_values.field_names,
-            card_values.fields, card_values.reserved_names,
-            set(card_values.reserved_names.values())))
-
-  return generate_unique_field_names_helper
+    generate_field_dict_well_formed,):
+  field_dict, anki_card_components = generate_field_dict_well_formed
+  expected_names = anki_card_components.expected_field_names
+  for test_value, expected_name in zip(field_dict.keys(), expected_names):
+    assert test_value == expected_name
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -398,12 +346,30 @@ def generate_unique_field_names_constructor(
     cases=_CASES,
     filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
     prefix='field_names')
+def test_generate_unique_field_names_length_matches_fields_length(
+    field_names,
+    generate_unique_field_names_constructor,
+):
+  """This test also guarantees that generated field_names are unique."""
+  test_field_names, expected_field_names = generate_unique_field_names_constructor(
+      field_names)
+  assert len(test_field_names) == len(expected_field_names)
+
+
+@pytest.mark.filterwarnings('ignore')
+@pytest_cases.parametrize_with_cases(
+    'field_names',
+    cases=_CASES,
+    filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+    prefix='field_names',
+)
 def test_generate_unique_field_names_replaces_field_names(
-    field_names, generate_unique_field_names_constructor,
-    fully_specified_anki_card_components):
-  expected = fully_specified_anki_card_components
-  test_field_names = generate_unique_field_names_constructor(field_names)
-  assert test_field_names == expected.field_names
+    field_names,
+    generate_unique_field_names_constructor,
+):
+  test_field_names, expected_field_names = generate_unique_field_names_constructor(
+      field_names)
+  assert test_field_names == expected_field_names
 
 
 @pytest_cases.parametrize_with_cases(
@@ -441,11 +407,14 @@ def test_generate_unique_field_names_longer_field_names_multiple_extra_raises_on
 @pytest_cases.parametrize_with_cases(
     'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
 def test_generate_unique_field_names_longer_field_names_multiple_extra_returns_all_extra(
-    field_names, generate_unique_field_names_constructor,
-    fully_specified_anki_card_components):
-  surplus_starting_index = len(fully_specified_anki_card_components.field_names)
+    field_names,
+    generate_unique_field_names_constructor,
+):
   with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
-    generate_unique_field_names_constructor(field_names=field_names)
+    test_field_names, expected_field_names = generate_unique_field_names_constructor(
+        field_names)
+    del test_field_names  # unused
+  surplus_starting_index = len(expected_field_names)
   warning = record[0].message
   warning = cast(exceptions.LeftoverArgumentWarning, warning)
   actual_extra_field_names = warning.leftovers
@@ -474,19 +443,20 @@ def test_generate_unique_field_names_mismatched_reserved_name_raises_header_fiel
 def test_generate_unique_field_names_multiple_mismatched_reserved_name_raises_multiple_header_field_name_mismatch_warning(
     field_names,
     generate_unique_field_names_constructor,
-    fully_specified_anki_card_components,
 ):
-  number_mismatches = len(
-      set(fully_specified_anki_card_components.field_names) - set(field_names))
   with pytest.warns(exceptions.HeaderFieldNameMismatchWarning) as record:
-    generate_unique_field_names_constructor(field_names=field_names)
+    test_field_names, expected_field_names = generate_unique_field_names_constructor(
+        field_names)
+    del test_field_names  # unused
+  # Right hand side is the number of field_names which were altered
+  number_mismatches = len(set(expected_field_names) - set(field_names))
   assert len(record) == number_mismatches
 
 
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['DuplicateReservedFieldNames', 'GenericFieldNameOverwritten'],
+    has_tag=['DuplicateReservedFieldNames'],
     prefix='field_names')
 def test_generate_unique_field_names_duplicate_reserved_name_raises_duplicate_warning(
     field_names,
@@ -499,24 +469,24 @@ def test_generate_unique_field_names_duplicate_reserved_name_raises_duplicate_wa
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['DuplicateReservedFieldNames', 'GenericFieldNameOverwritten'],
+    has_tag=['DuplicateReservedFieldNames'],
     prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_reserved_name_raises_multiple_duplicate_warning(
     field_names,
     generate_unique_field_names_constructor,
-    fully_specified_anki_card_components,
 ):
-  number_duplicate = len(
-      fully_specified_anki_card_components.field_names) - len(set(field_names))
   with pytest.warns(exceptions.DuplicateWarning) as record:
-    generate_unique_field_names_constructor(field_names=field_names)
+    test_field_names, expected_field_names = generate_unique_field_names_constructor(
+        field_names)
+    del test_field_names  # unused
+  number_duplicate = len(expected_field_names) - len(set(field_names))
   assert len(record) == number_duplicate
 
 
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['GenericFieldNameOverwritten', 'UsageAfterAssignment'],
+    has_tag=['UsageAfterAssignment'],
     prefix='field_names')
 def test_generate_unique_field_names_duplicate_default_name_after_assignment_raises_duplicate_warning(
     field_names,
@@ -529,24 +499,24 @@ def test_generate_unique_field_names_duplicate_default_name_after_assignment_rai
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['GenericFieldNameOverwritten', 'UsageAfterAssignment'],
+    has_tag=['UsageAfterAssignment'],
     prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_default_name_after_assignment_raises_multiple_duplicate_warning(
     field_names,
     generate_unique_field_names_constructor,
-    fully_specified_anki_card_components,
 ):
-  number_duplicate = len(
-      fully_specified_anki_card_components.field_names) - len(set(field_names))
   with pytest.warns(exceptions.DuplicateWarning) as record:
-    generate_unique_field_names_constructor(field_names=field_names)
+    test_field_names, expected_field_names = generate_unique_field_names_constructor(
+        field_names)
+    del test_field_names  # unused
+  number_duplicate = len(expected_field_names) - len(set(field_names))
   assert len(record) == number_duplicate
 
 
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['GenericFieldNameOverwritten', 'UsageBeforeAssignment'],
+    has_tag=['UsageBeforeAssignment'],
     prefix='field_names')
 def test_generate_unique_field_names_duplicate_default_name_before_assignment_raises_value_error(
     field_names,
@@ -559,7 +529,7 @@ def test_generate_unique_field_names_duplicate_default_name_before_assignment_ra
 @pytest_cases.parametrize_with_cases(
     'field_names',
     cases=_CASES,
-    has_tag=['GenericFieldNameOverwritten', 'UsageBeforeAssignment'],
+    has_tag=['UsageBeforeAssignment'],
     prefix='field_names')
 def test_generate_unique_field_names_multiple_duplicate_default_name_before_assignment_raises_single_value_error(
     field_names,
