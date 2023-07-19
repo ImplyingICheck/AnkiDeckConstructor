@@ -23,6 +23,7 @@
 import collections
 import csv
 import io
+import os
 import warnings
 from typing import cast
 
@@ -32,6 +33,7 @@ import pytest_cases.filters
 # function is not discovered during test collection.
 from test_gaggle.case_ankicard import *  # pylint: disable=wildcard-import,unused-wildcard-import # pyright: ignore [reportMissingImports]
 from .conftest import new_header_gaggle_format, new_field_names_remove_reserved, falsy_values_hashable  # pylint: disable=relative-beyond-top-level
+import unittest.mock
 
 from gaggle import gaggle
 from gaggle import exceptions
@@ -224,65 +226,78 @@ def test_as_str_list_order_matches(anki_card_components):
   assert anki_card.as_str_list() == expected_fields
 
 
-# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+def format_as_tsv(fields):
+  """Formatting expected of a TSV line.
+
+  Values delimited by tab (i.e. '\t'), finished with a os dependent line
+  seperator.
+  """
+  expected_output = '\t'.join(fields)
+  return f'{expected_output}{os.linesep}'
+
+
+@pytest.mark.filterwarnings('ignore')
 @pytest_cases.parametrize_with_cases(
     'anki_card_components',
     cases=_CASES,
     has_tag=['WellFormed', 'AnkiCardComponents'])
-def test_write_as_tsv_csv_writer_one_line(
-    tmp_path,
-    anki_card_components,
-):
-  file = tmp_path / 'test_write_as_tsv_csv_writer_one_line.txt'
+def test_write_as_tsv_formatted_correctly_one_line(anki_card_components,):
   anki_card = anki_card_components.new_anki_card()
-  expected_write_output = anki_card_components.expected_fields
-  with open(file, **WRITE_PARAMS) as f:
-    w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    anki_card.write_as_tsv(w)
-  with open(file, **READ_PARAMS) as f:
-    r = csv.reader(f, dialect=TSV_FILE_DIALECT)
-    test_card = next(r)
-    assert test_card == expected_write_output
+  expected_write_output = format_as_tsv(anki_card_components.expected_fields)
+  mock_open = unittest.mock.mock_open()
+  with unittest.mock.patch('builtins.open', mock_open):
+    with open('myfile.txt', **WRITE_PARAMS) as f:
+      w = csv.writer(f, dialect=TSV_FILE_DIALECT)
+      anki_card.write_as_tsv(w)
+    mock_open().write.assert_called_once_with(expected_write_output)
 
 
-# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+@pytest.mark.filterwarnings('ignore')
 @pytest_cases.parametrize_with_cases(
-    'anki_card_components',
+    'anki_card_components_one',
     cases=_CASES,
     has_tag=['WellFormed', 'AnkiCardComponents'])
-def test_write_as_tsv_csv_writer_multiple_lines(
-    tmp_path,
-    anki_card_components,
+@pytest_cases.parametrize_with_cases(
+    'anki_card_components_two',
+    cases=_CASES,
+    has_tag=['WellFormed', 'AnkiCardComponents'])
+def test_write_as_tsv_formatted_correctly_multiple_lines(
+    mocker,
+    anki_card_components_one,
+    anki_card_components_two,
 ):
-  file = tmp_path / 'test_write_as_tsv_csv_writer_multiple_lines.txt'
-  anki_card = anki_card_components.new_anki_card()
-  expected_write_output = anki_card_components.expected_fields
-  with open(file, **WRITE_PARAMS) as f:
+  anki_card_one = anki_card_components_one.new_anki_card()
+  anki_card_two = anki_card_components_two.new_anki_card()
+  expected_write_output_one = format_as_tsv(
+      anki_card_components_one.expected_fields)
+  expected_write_output_two = format_as_tsv(
+      anki_card_components_two.expected_fields)
+  mock_open = mocker.patch('builtins.open', mocker.mock_open())
+  with open('myfile.txt', **WRITE_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    anki_card.write_as_tsv(w)
-    anki_card.write_as_tsv(w)
-  with open(file, **READ_PARAMS) as f:
-    r = csv.reader(f, dialect=TSV_FILE_DIALECT)
-    for test_card in r:
-      assert test_card == expected_write_output
+    anki_card_one.write_as_tsv(w)
+    anki_card_two.write_as_tsv(w)
+  expected_write_calls = [
+      mocker.call(expected_write_output_one),
+      mocker.call(expected_write_output_two)
+  ]
+  mock_open().write.assert_has_calls(expected_write_calls)
 
 
-# TODO: Reformat as Open File, Write to Output Stream, Close Output Stream tests
+@pytest.mark.filterwarnings('ignore')
 @pytest_cases.parametrize_with_cases(
     'anki_card', cases=_CASES, has_tag=['WellFormed', 'AnkiCard'])
 def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
-    tmp_path, anki_card):
-  file = tmp_path / ('test_write_as_tsv_no_write_permission_raises_unsupported_'
-                     'operation.txt')
-  try:
-    open(file, **EXCLUSIVE_OPEN_PARAMS)  #pylint: disable='consider-using-with'
-  except:  # pylint: disable='bare-except'
-    pytest.fail('Test file could not be created. Required to simulate improper '
-                'file permissions.')
-  with open(file, **READ_PARAMS) as f:
+    mocker,
+    anki_card,
+):
+  mock_open = mocker.patch('builtins.open', mocker.mock_open())
+  mock_open().write.side_effect = io.UnsupportedOperation
+  with open('myfile.txt', **READ_PARAMS) as f:
     w = csv.writer(f, dialect=TSV_FILE_DIALECT)
     with pytest.raises(io.UnsupportedOperation):
       anki_card.write_as_tsv(w)
+  mock_open()
 
 
 def has_html_expected_bool(has_html_as_string):

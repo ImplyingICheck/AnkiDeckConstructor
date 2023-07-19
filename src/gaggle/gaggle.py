@@ -762,6 +762,9 @@ class AnkiDeck:
     Args:
       f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
       example using open().
+
+    Raises:
+      io.UnsupportedOperation: If write permission is not given by f.
     """
     self.write_header(f)
     w = csv.writer(f, dialect=_ANKI_EXPORT_CONTENT_DIALECT)
@@ -1064,6 +1067,9 @@ class AnkiCard:
     Args:
       w: The stream to write to. Must have internal formatting data.
         See AnkiDeck.write_as_tsv() for an example using csv.writer.
+
+    Raises:
+      io.UnsupportedOperation: If write permission is not given by w.
     """
     content = self.as_str_list()
     w.writerow(content)
