@@ -13,6 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # Gaggle. If not, see <https://www.gnu.org/licenses/>.
+# Bug when using open() with **kwargs. Fixed in 2.17.5
+# pylint: disable=unspecified-encoding
 """Base class for collection, a class representing multiple Anki Decks."""
 from __future__ import annotations
 
@@ -26,7 +28,7 @@ import operator
 import enum
 import warnings
 from _csv import Dialect
-from typing import overload, Any, ParamSpec, Protocol, Self, SupportsIndex, SupportsInt, TypeVar, TYPE_CHECKING
+from typing import overload, Any, ParamSpec, Protocol, Self, SupportsIndex, SupportsInt, TypedDict, TypeVar, TYPE_CHECKING
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sized
 
 from gaggle import exceptions
@@ -116,8 +118,27 @@ _ANKI_ORDERED_HEADER = [
 ]
 _ANKI_NOTESINPLAINTEXT_EXT = '.txt'
 _ANKI_CARDSINPLAINTEXT_EXT = '.txt'
+_ANKI_EXPORT_CONTENT_DIALECT = 'excel-tab'
 
 GENERIC_EXPORT_FILE_NAME = 'GaggleFile'
+
+
+class OpenOptions(TypedDict):
+  mode: str
+  encoding: str
+  newline: str
+
+
+EXCLUSIVE_OPEN_PARAMS: OpenOptions = {
+    'mode': 'x',
+    'encoding': _ANKI_EXPORT_ENCODING,
+    'newline': ''
+}
+READ_PARAMS: OpenOptions = {
+    'mode': 'r',
+    'encoding': _ANKI_EXPORT_ENCODING,
+    'newline': ''
+}
 
 
 class ReformatDirection(enum.StrEnum):
@@ -366,7 +387,7 @@ class Gaggle:
     """
     self.decks: list[AnkiDeck] = _initialise_decks(exported_file, field_names)
 
-  def __iter__(self):
+  def __iter__(self) -> Iterator[AnkiDeck]:
     return iter(self.decks)
 
   def add_deck(self, deck: AnkiDeck) -> None:
@@ -417,9 +438,7 @@ class Gaggle:
     if isinstance(deck, int):
       deck = self.get_deck(deck)
     file_path = _generate_unique_file_path(filename, extension, destination)
-    encoding = _ANKI_EXPORT_ENCODING
-    mode = 'x'
-    with open(file_path, mode=mode, encoding=encoding, newline='') as f:
+    with open(file_path, **EXCLUSIVE_OPEN_PARAMS) as f:
       if file_type in (_ANKI_NOTESINPLAINTEXT_EXT, _ANKI_NOTESINPLAINTEXT_EXT):
         deck.write_as_tsv(f)
       else:
@@ -641,7 +660,7 @@ def _parse_anki_export(
   seperator_setting_key = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_NAME
   tsv = _ANKI_EXPORT_HEADER_SETTING_SEPARATOR_TSV_STRING
   cards = []
-  with open(exported_file, encoding=_ANKI_EXPORT_ENCODING) as f:
+  with open(exported_file, **READ_PARAMS) as f:
     header = parse_header_settings(f)
     if header[seperator_setting_key] == tsv:
       del header[seperator_setting_key]
@@ -686,7 +705,7 @@ class AnkiDeck:
     header, cards = _parse_anki_export(file, field_names)
     return cls(header, cards)
 
-  def __iter__(self):
+  def __iter__(self) -> Iterator[AnkiCard]:
     return iter(self.cards)
 
   def get_header_setting(
@@ -743,9 +762,12 @@ class AnkiDeck:
     Args:
       f: A stream implementing write(). See Gaggle.write_deck_to_file() for an
       example using open().
+
+    Raises:
+      io.UnsupportedOperation: If write permission is not given by f.
     """
     self.write_header(f)
-    w = csv.writer(f, dialect='excel-tab')
+    w = csv.writer(f, dialect=_ANKI_EXPORT_CONTENT_DIALECT)
     for card in self.cards:
       card.write_as_tsv(w)
 
@@ -770,10 +792,12 @@ def create_cards_from_tsv(
   """
   if header is None:
     header = {}
-  cards = csv.reader(f, dialect='excel-tab')
+  cards = csv.reader(f, dialect=_ANKI_EXPORT_CONTENT_DIALECT)
   deck: list[AnkiCard] = []
   for card in cards:
-    anki_card = AnkiCard(card, field_names=field_names, **header)
+    anki_card = AnkiCard(
+        card, field_names=field_names,
+        **header)  # pyright: ignore [reportGeneralTypeIssues]
     deck.append(anki_card)
   return deck
 
@@ -783,9 +807,9 @@ _stack_levels_to_anki_card_init_call = 4
 
 
 @propagate_warnings_from_generator(_stack_levels_to_anki_card_init_call)
-def _generate_unique_field_names(field_names: Iterator[str],
-                                 fields: Iterator[Any],
-                                 reserved_names: Mapping[int, str],
+def _generate_unique_field_names(field_names: Iterator[str] | Iterable[str],
+                                 fields: Iterator[Any] | Iterable[Any],
+                                 indexes_reserved_names: Mapping[int, str],
                                  seen_names: set[str]) -> Iterator[str]:
   """Generator for field names; prevents duplicate names from being returned.
 
@@ -802,19 +826,29 @@ def _generate_unique_field_names(field_names: Iterator[str],
       Falsy value to apply a default field name.
     fields: The fields to be named. Used as a reference for length, not
       modified. Iterator is exhausted.
-    reserved_names: Names
-    seen_names:
+    indexes_reserved_names: An index representing the column to which assign
+      the corresponding reserved name.
+    seen_names: Names designated as unique and cannot be assigned through
+      field_names. Should always contain at least AnkiCard._reserved_names for
+      assumptions of class properties to hold. May contain extra values to be
+      protected (i.e. prevented from being assigned).
 
   Yields:
     Unique values from field_names
 
   Raises:
-    ValueError: If an index-bound generic name is duplicated and least two
-    duplicates are not specified in reserved_names
+    ValueError: If an index-bound default name is reserved before a field would
+      have used that name. For example, naming Field0 "Field2" and then having
+      no field name specified for Field2.
     DuplicateWarning: Raised in two situations. If field_names contains a name
-    specified by reserved_names. If field_names contains a duplicate value.
+      specified by reserved_names. If field_names contains a duplicate value.
     LeftoverArgumentWarning: If field_names contains more values than fields
+    HeaderFieldNameMismatchWarning: If field_names contains a non-empty string
+      which contradicts a value specified by indexes_reserved_names. Takes
+      precedence over DuplicateWarning when both apply.
   """
+  field_names = iter(field_names)
+  fields = iter(fields)
   for count in itertools.count():
     name = next(field_names, None)
     field_to_be_named = next(fields, None)
@@ -827,7 +861,13 @@ def _generate_unique_field_names(field_names: Iterator[str],
                 context_message='More field names than fields',
                 leftover_name='field names'))
       return
-    if (reserved_name := reserved_names.get(count)) is not None:
+    if (reserved_name := indexes_reserved_names.get(count)) is not None:
+      if name and name != reserved_name:
+        warnings.warn(
+            exceptions.HeaderFieldNameMismatchWarning(
+                overwritten_value=name,
+                replacement_value=reserved_name,
+            ))
       yield reserved_name
     else:
       if name in seen_names:
@@ -845,20 +885,35 @@ def _generate_unique_field_names(field_names: Iterator[str],
 
 
 def _generate_field_dict(
-    field_names: Iterator[_T],
-    fields: Iterator[_S],
-) -> collections.OrderedDict[_T, _S]:
+    field_names: Iterator[str] | Iterable[str],
+    fields: Iterator[_S] | Iterable[_S],
+    indexes_reserved_names: Mapping[int, str],
+    seen_names: set[str],
+) -> collections.OrderedDict[str, _S]:
   """Create a dictionary mapping given names to a value in AnkiCard.
 
   Args:
     field_names: Names used for referencing values stored in the field dict.
     Special properties exist for fields named by the header.
-    Must match the length of fields.
     fields: The values to be stored in an AnkiCard.
 
   Returns:
     Named values whose iteration order is the same as read from file.
+
+  Raises:
+    ValueError: If an index-bound default name is reserved before a field would
+      have used that name. For example, naming Field0 "Field2" and then having
+      no field name specified for Field2.
+    DuplicateWarning: Raised in two situations. If field_names contains a name
+      specified by reserved_names. If field_names contains a duplicate value.
+    LeftoverArgumentWarning: If field_names contains more values than fields
+    HeaderFieldNameMismatchWarning: If field_names contains a non-empty string
+      which contradicts a value specified by indexes_reserved_names. Takes
+      precedence over DuplicateWarning when both apply.
   """
+  field_names = _generate_unique_field_names(field_names, fields,
+                                             indexes_reserved_names, seen_names)
+  fields = iter(fields)
   name_field_tuples = zip(field_names, fields, strict=True)
   return collections.OrderedDict(name_field_tuples)
 
@@ -908,7 +963,7 @@ class AnkiCard:
                guid_idx: int | None = None):
     if field_names is None:
       field_names = ()
-    self.has_html = _parse_anki_header_bool(has_html)
+    self.has_html: bool = _parse_anki_header_bool(has_html)
     property_indexes = [tags_idx, deck_idx, note_type_idx, guid_idx]
     reserved_names = {
         index: name
@@ -917,9 +972,8 @@ class AnkiCard:
         if index is not None
     }
     reserved_name_set = set(AnkiCard._reserved_names)
-    field_names = _generate_unique_field_names(
-        iter(field_names), iter(fields), reserved_names, reserved_name_set)
-    self.fields = _generate_field_dict(iter(field_names), iter(fields))
+    self.fields: collections.OrderedDict[str, str] = _generate_field_dict(
+        field_names, fields, reserved_names, reserved_name_set)
 
   @property
   def tags(self) -> str:
@@ -980,7 +1034,7 @@ class AnkiCard:
     """
     return self.get_field('GUID')
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return str(self.fields)
 
   def get_field(self, field_name: str) -> str:
@@ -1013,6 +1067,9 @@ class AnkiCard:
     Args:
       w: The stream to write to. Must have internal formatting data.
         See AnkiDeck.write_as_tsv() for an example using csv.writer.
+
+    Raises:
+      io.UnsupportedOperation: If write permission is not given by w.
     """
     content = self.as_str_list()
     w.writerow(content)

@@ -34,10 +34,15 @@ pyright = "^1.1.314"
 pre-commit = "^3.3.3"
 pytest-cases = "^3.6.14"
 xxhash = "^3.2.0"
+pytest-mock = "^3.11.1"
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
-pythonpath = "src"
+pythonpath = "src cases"
+markers = [
+    "slow: marks slow-running tests",
+    "io: marks tests using external IO dependencies",
+]
 
 [tool.yapfignore]
 ignore_patterns = [
@@ -49,7 +54,7 @@ ignore_patterns = [
 based_on_style = "yapf"
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "tests"]
 exclude = ["dev_files/*.py"]
 strict = ["src/gaggle"]
 reportMissingImports = true
