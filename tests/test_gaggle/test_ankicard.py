@@ -23,6 +23,7 @@
 import collections
 import csv
 import io
+import itertools
 import os
 import warnings
 from typing import cast
@@ -103,62 +104,65 @@ def generate_unique_field_names_constructor(anki_card_components_constructor,):
   return generate_unique_field_names_helper
 
 
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'fields',
-    cases=_CASES,
-    has_tag=['Fields'],
-    prefix='fields',
-)
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    filter=pytest_cases.filters.has_tag('FieldNames')
-    & ~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
-    prefix='field_names',
-)
-@pytest_cases.parametrize_with_cases(
-    'has_html',
-    cases=_CASES,
-    has_tag=['HasHtml', 'Well-Formed'],
-    prefix='has_html',
-)
-@pytest_cases.parametrize_with_cases(
-    'tags_idx',
-    cases=_CASES,
-    has_tag=['TagsIdx'],
-    prefix='tags_idx',
-)
-@pytest_cases.parametrize_with_cases(
-    'note_type_idx',
-    cases=_CASES,
-    has_tag=['NoteTypeIdx'],
-    prefix='note_type_idx',
-)
-@pytest_cases.parametrize_with_cases(
-    'deck_idx',
-    cases=_CASES,
-    has_tag=['GuidIdx'],
-    prefix='guid_idx',
-)
-@pytest_cases.parametrize_with_cases(
-    'guid_idx',
-    cases=_CASES,
-    has_tag=['DeckIdx'],
-    prefix='deck_idx',
-)
-def test_anki_card_init_generic_arguments(
-    fields,
-    field_names,
-    has_html,
-    tags_idx,
-    note_type_idx,
-    deck_idx,
-    guid_idx,
-):
-  card = gaggle.AnkiCard(fields, field_names, has_html, tags_idx, note_type_idx,
-                         deck_idx, guid_idx)
-  assert card
+class TestAnkiCardInit:
+
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'fields',
+      cases=_CASES,
+      has_tag=['Fields'],
+      prefix='fields',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      filter=pytest_cases.filters.has_tag('FieldNames')
+      & ~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+      prefix='field_names',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'has_html',
+      cases=_CASES,
+      has_tag=['HasHtml', 'Well-Formed'],
+      prefix='has_html',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'tags_idx',
+      cases=_CASES,
+      has_tag=['TagsIdx'],
+      prefix='tags_idx',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'note_type_idx',
+      cases=_CASES,
+      has_tag=['NoteTypeIdx'],
+      prefix='note_type_idx',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'deck_idx',
+      cases=_CASES,
+      has_tag=['GuidIdx'],
+      prefix='guid_idx',
+  )
+  @pytest_cases.parametrize_with_cases(
+      'guid_idx',
+      cases=_CASES,
+      has_tag=['DeckIdx'],
+      prefix='deck_idx',
+  )
+  def test_anki_card_init_valid_arguments(
+      self,
+      fields,
+      field_names,
+      has_html,
+      tags_idx,
+      note_type_idx,
+      deck_idx,
+      guid_idx,
+  ):
+    card = gaggle.AnkiCard(fields, field_names, has_html, tags_idx,
+                           note_type_idx, deck_idx, guid_idx)
+    assert card
 
 
 @pytest_cases.parametrize_with_cases(
@@ -236,68 +240,73 @@ def format_as_tsv(fields):
   return f'{expected_output}{os.linesep}'
 
 
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'anki_card_components',
-    cases=_CASES,
-    has_tag=['WellFormed', 'AnkiCardComponents'])
-def test_write_as_tsv_formatted_correctly_one_line(anki_card_components,):
-  anki_card = anki_card_components.new_anki_card()
-  expected_write_output = format_as_tsv(anki_card_components.expected_fields)
-  mock_open = unittest.mock.mock_open()
-  with unittest.mock.patch('builtins.open', mock_open):
+class TestWriteAsTsv:
+
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'anki_card_components',
+      cases=_CASES,
+      has_tag=['WellFormed', 'AnkiCardComponents'])
+  def test_write_as_tsv_formatted_correctly_one_line(
+      self,
+      anki_card_components,
+  ):
+    anki_card = anki_card_components.new_anki_card()
+    expected_write_output = format_as_tsv(anki_card_components.expected_fields)
+    mock_open = unittest.mock.mock_open()
+    with unittest.mock.patch('builtins.open', mock_open):
+      with open('myfile.txt', **WRITE_PARAMS) as f:
+        w = csv.writer(f, dialect=TSV_FILE_DIALECT)
+        anki_card.write_as_tsv(w)
+      mock_open().write.assert_called_once_with(expected_write_output)
+
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'anki_card_components_one',
+      cases=_CASES,
+      has_tag=['WellFormed', 'AnkiCardComponents'])
+  @pytest_cases.parametrize_with_cases(
+      'anki_card_components_two',
+      cases=_CASES,
+      has_tag=['WellFormed', 'AnkiCardComponents'])
+  def test_write_as_tsv_formatted_correctly_multiple_lines(
+      self,
+      mocker,
+      anki_card_components_one,
+      anki_card_components_two,
+  ):
+    anki_card_one = anki_card_components_one.new_anki_card()
+    anki_card_two = anki_card_components_two.new_anki_card()
+    expected_write_output_one = format_as_tsv(
+        anki_card_components_one.expected_fields)
+    expected_write_output_two = format_as_tsv(
+        anki_card_components_two.expected_fields)
+    mock_open = mocker.patch('builtins.open', mocker.mock_open())
     with open('myfile.txt', **WRITE_PARAMS) as f:
       w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-      anki_card.write_as_tsv(w)
-    mock_open().write.assert_called_once_with(expected_write_output)
+      anki_card_one.write_as_tsv(w)
+      anki_card_two.write_as_tsv(w)
+    expected_write_calls = [
+        mocker.call(expected_write_output_one),
+        mocker.call(expected_write_output_two)
+    ]
+    mock_open().write.assert_has_calls(expected_write_calls)
 
-
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'anki_card_components_one',
-    cases=_CASES,
-    has_tag=['WellFormed', 'AnkiCardComponents'])
-@pytest_cases.parametrize_with_cases(
-    'anki_card_components_two',
-    cases=_CASES,
-    has_tag=['WellFormed', 'AnkiCardComponents'])
-def test_write_as_tsv_formatted_correctly_multiple_lines(
-    mocker,
-    anki_card_components_one,
-    anki_card_components_two,
-):
-  anki_card_one = anki_card_components_one.new_anki_card()
-  anki_card_two = anki_card_components_two.new_anki_card()
-  expected_write_output_one = format_as_tsv(
-      anki_card_components_one.expected_fields)
-  expected_write_output_two = format_as_tsv(
-      anki_card_components_two.expected_fields)
-  mock_open = mocker.patch('builtins.open', mocker.mock_open())
-  with open('myfile.txt', **WRITE_PARAMS) as f:
-    w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    anki_card_one.write_as_tsv(w)
-    anki_card_two.write_as_tsv(w)
-  expected_write_calls = [
-      mocker.call(expected_write_output_one),
-      mocker.call(expected_write_output_two)
-  ]
-  mock_open().write.assert_has_calls(expected_write_calls)
-
-
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'anki_card', cases=_CASES, has_tag=['WellFormed', 'AnkiCard'])
-def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
-    mocker,
-    anki_card,
-):
-  mock_open = mocker.patch('builtins.open', mocker.mock_open())
-  mock_open().write.side_effect = io.UnsupportedOperation
-  with open('myfile.txt', **READ_PARAMS) as f:
-    w = csv.writer(f, dialect=TSV_FILE_DIALECT)
-    with pytest.raises(io.UnsupportedOperation):
-      anki_card.write_as_tsv(w)
-  mock_open()
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'anki_card', cases=_CASES, has_tag=['WellFormed', 'AnkiCard'])
+  def test_write_as_tsv_no_write_permission_raises_unsupported_operation(
+      self,
+      mocker,
+      anki_card,
+  ):
+    mock_open = mocker.patch('builtins.open', mocker.mock_open())
+    mock_open().write.side_effect = io.UnsupportedOperation
+    with open('myfile.txt', **READ_PARAMS) as f:
+      w = csv.writer(f, dialect=TSV_FILE_DIALECT)
+      with pytest.raises(io.UnsupportedOperation):
+        anki_card.write_as_tsv(w)
+    mock_open()
 
 
 def has_html_expected_bool(has_html_as_string):
@@ -309,251 +318,285 @@ def has_html_expected_bool(has_html_as_string):
     raise ValueError
 
 
-@pytest_cases.parametrize_with_cases(
-    'has_html',
-    cases=_CASES,
-    has_tag=['HasHtml', 'Well-Formed'],
-    prefix='has_html')
-def test_parse_anki_header_bool_valid_input(has_html):
-  expected_bool = has_html_expected_bool(has_html)
-  assert gaggle._parse_anki_header_bool(has_html) == expected_bool
+class TestHasHtml:
+
+  @pytest_cases.parametrize_with_cases(
+      'has_html',
+      cases=_CASES,
+      has_tag=['HasHtml', 'Well-Formed'],
+      prefix='has_html')
+  def test_parse_anki_header_bool_valid_input(self, has_html):
+    expected_bool = has_html_expected_bool(has_html)
+    assert gaggle._parse_anki_header_bool(has_html) == expected_bool
+
+  @pytest_cases.parametrize_with_cases(
+      'has_html',
+      cases=_CASES,
+      has_tag=['HasHtml', 'Malformed'],
+      prefix='has_html')
+  def test_parse_anki_header_bool_invalid_value_raises_value_error(
+      self, has_html):
+    with pytest.raises(ValueError):
+      gaggle._parse_anki_header_bool(has_html)
 
 
-@pytest_cases.parametrize_with_cases(
-    'has_html',
-    cases=_CASES,
-    has_tag=['HasHtml', 'Malformed'],
-    prefix='has_html')
-def test_parse_anki_header_bool_invalid_value_raises_value_error(has_html):
-  with pytest.raises(ValueError):
-    gaggle._parse_anki_header_bool(has_html)
+class TestGenerateFieldDict:
+
+  @pytest.mark.filterwarnings('ignore')
+  def test_generate_field_dict_returns_ordered_dict(
+      self,
+      generate_field_dict_well_formed,
+  ):
+    field_dict, anki_card_components = generate_field_dict_well_formed
+    del anki_card_components  # Unused
+    assert isinstance(field_dict, collections.OrderedDict)
+
+  @pytest.mark.filterwarnings('ignore')
+  def test_generate_field_dict_preserves_order_fields(
+      self,
+      generate_field_dict_well_formed,
+  ):
+    field_dict, anki_card_components = generate_field_dict_well_formed
+    expected_values = anki_card_components.expected_fields
+    for test_value, expected_value in zip(field_dict.values(), expected_values):
+      assert test_value == expected_value
+
+  @pytest.mark.filterwarnings('ignore')
+  def test_generate_field_dict_preserves_order_field_names(
+      self,
+      generate_field_dict_well_formed,
+  ):
+    field_dict, anki_card_components = generate_field_dict_well_formed
+    expected_names = anki_card_components.expected_field_names
+    for test_value, expected_name in zip(field_dict.keys(), expected_names):
+      assert test_value == expected_name
 
 
-@pytest.mark.filterwarnings('ignore')
-def test_generate_field_dict_returns_ordered_dict(
-    generate_field_dict_well_formed,):
-  field_dict, anki_card_components = generate_field_dict_well_formed
-  del anki_card_components  # Unused
-  assert isinstance(field_dict, collections.OrderedDict)
+def get_code_line(filename, lineno):
+  with open(filename, encoding='utf-8') as f:
+    return next(itertools.islice(f, lineno - 1, lineno))
 
 
-@pytest.mark.filterwarnings('ignore')
-def test_generate_field_dict_preserves_order_fields(
-    generate_field_dict_well_formed,):
-  field_dict, anki_card_components = generate_field_dict_well_formed
-  expected_values = anki_card_components.expected_fields
-  for test_value, expected_value in zip(field_dict.values(), expected_values):
-    assert test_value == expected_value
+class TestGenerateUniqueFieldNames:
 
+  @pytest.mark.slow
+  @pytest.mark.io
+  @pytest_cases.parametrize_with_cases(
+      'anki_card_components',
+      cases=_CASES,
+      has_tag=['ModifiedFullySpecified', 'AnkiCardComponents'])
+  def test_generate_unique_field_names_warning_points_to_anki_card_initialisation(
+      self, anki_card_components):
+    with warnings.catch_warnings(record=True) as records:
+      anki_card_components.new_anki_card()
+    for record in records:
+      assert 'AnkiCard(' in get_code_line(record.filename, record.lineno)
 
-@pytest.mark.filterwarnings('ignore')
-def test_generate_field_dict_preserves_order_field_names(
-    generate_field_dict_well_formed,):
-  field_dict, anki_card_components = generate_field_dict_well_formed
-  expected_names = anki_card_components.expected_field_names
-  for test_value, expected_name in zip(field_dict.keys(), expected_names):
-    assert test_value == expected_name
-
-
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
-    prefix='field_names')
-def test_generate_unique_field_names_length_matches_fields_length(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  """This test also guarantees that generated field_names are unique."""
-  test_field_names, expected_field_names = generate_unique_field_names_constructor(
-      field_names)
-  assert len(test_field_names) == len(expected_field_names)
-
-
-@pytest.mark.filterwarnings('ignore')
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
-    prefix='field_names',
-)
-def test_generate_unique_field_names_replaces_field_names(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  test_field_names, expected_field_names = generate_unique_field_names_constructor(
-      field_names)
-  assert test_field_names == expected_field_names
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names', cases=_CASES, has_tag=['Well-Formed'], prefix='field_names')
-def test_generate_unique_field_names_well_formed_no_warnings(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with warnings.catch_warnings():
-    warnings.simplefilter('error')
-    generate_unique_field_names_constructor(field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
-def test_generate_unique_field_names_longer_field_names_raises_leftover_argument_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.LeftoverArgumentWarning):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
-def test_generate_unique_field_names_longer_field_names_multiple_extra_raises_one_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
-    generate_unique_field_names_constructor(field_names=field_names)
-  assert len(record) == 1
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
-def test_generate_unique_field_names_longer_field_names_multiple_extra_returns_all_extra(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+      prefix='field_names')
+  def test_generate_unique_field_names_length_matches_fields_length(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    """This test also guarantees that generated field_names are unique."""
     test_field_names, expected_field_names = generate_unique_field_names_constructor(
         field_names)
-    del test_field_names  # unused
-  surplus_starting_index = len(expected_field_names)
-  warning = record[0].message
-  warning = cast(exceptions.LeftoverArgumentWarning, warning)
-  actual_extra_field_names = warning.leftovers
-  expected_extra_field_names = ' '.join(field_names[surplus_starting_index:])
-  assert actual_extra_field_names == expected_extra_field_names
+    assert len(test_field_names) == len(expected_field_names)
 
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['HeaderNameMismatch'],
-    prefix='field_names')
-def test_generate_unique_field_names_mismatched_reserved_name_raises_header_field_name_mismatch_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.HeaderFieldNameMismatchWarning):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['HeaderNameMismatch'],
-    prefix='field_names')
-def test_generate_unique_field_names_multiple_mismatched_reserved_name_raises_multiple_header_field_name_mismatch_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.HeaderFieldNameMismatchWarning) as record:
+  @pytest.mark.filterwarnings('ignore')
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      filter=~pytest_cases.filters.has_tag('UsageBeforeAssignment'),
+      prefix='field_names',
+  )
+  def test_generate_unique_field_names_replaces_field_names(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
     test_field_names, expected_field_names = generate_unique_field_names_constructor(
         field_names)
-    del test_field_names  # unused
-  # Right hand side is the number of field_names which were altered
-  number_mismatches = len(set(expected_field_names) - set(field_names))
-  assert len(record) == number_mismatches
+    assert test_field_names == expected_field_names
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['Well-Formed'],
+      prefix='field_names')
+  def test_generate_unique_field_names_well_formed_no_warnings(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with warnings.catch_warnings():
+      warnings.simplefilter('error')
+      generate_unique_field_names_constructor(field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
+  def test_generate_unique_field_names_longer_field_names_raises_leftover_argument_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.LeftoverArgumentWarning):
+      generate_unique_field_names_constructor(field_names=field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
+  def test_generate_unique_field_names_longer_field_names_multiple_extra_raises_one_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
+      generate_unique_field_names_constructor(field_names=field_names)
+    assert len(record) == 1
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names', cases=_CASES, has_tag=['Surplus'], prefix='field_names')
+  def test_generate_unique_field_names_longer_field_names_multiple_extra_returns_all_extra(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.LeftoverArgumentWarning) as record:
+      test_field_names, expected_field_names = generate_unique_field_names_constructor(
+          field_names)
+      del test_field_names  # unused
+    surplus_starting_index = len(expected_field_names)
+    warning = record[0].message
+    warning = cast(exceptions.LeftoverArgumentWarning, warning)
+    actual_extra_field_names = warning.leftovers
+    expected_extra_field_names = ' '.join(field_names[surplus_starting_index:])
+    assert actual_extra_field_names == expected_extra_field_names
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['HeaderNameMismatch'],
+      prefix='field_names')
+  def test_generate_unique_field_names_mismatched_reserved_name_raises_header_field_name_mismatch_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.HeaderFieldNameMismatchWarning):
+      generate_unique_field_names_constructor(field_names=field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['HeaderNameMismatch'],
+      prefix='field_names')
+  def test_generate_unique_field_names_multiple_mismatched_reserved_name_raises_multiple_header_field_name_mismatch_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.HeaderFieldNameMismatchWarning) as record:
+      test_field_names, expected_field_names = generate_unique_field_names_constructor(
+          field_names)
+      del test_field_names  # unused
+    # Right hand side is the number of field_names which were altered
+    number_mismatches = len(set(expected_field_names) - set(field_names))
+    assert len(record) == number_mismatches
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['DuplicateReservedFieldNames'],
+      prefix='field_names')
+  def test_generate_unique_field_names_duplicate_reserved_name_raises_duplicate_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.DuplicateWarning):
+      generate_unique_field_names_constructor(field_names=field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['DuplicateReservedFieldNames'],
+      prefix='field_names')
+  def test_generate_unique_field_names_multiple_duplicate_reserved_name_raises_multiple_duplicate_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.DuplicateWarning) as record:
+      test_field_names, expected_field_names = generate_unique_field_names_constructor(
+          field_names)
+      del test_field_names  # unused
+    number_duplicate = len(expected_field_names) - len(set(field_names))
+    assert len(record) == number_duplicate
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['UsageAfterAssignment'],
+      prefix='field_names')
+  def test_generate_unique_field_names_duplicate_default_name_after_assignment_raises_duplicate_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.DuplicateWarning):
+      generate_unique_field_names_constructor(field_names=field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['UsageAfterAssignment'],
+      prefix='field_names')
+  def test_generate_unique_field_names_multiple_duplicate_default_name_after_assignment_raises_multiple_duplicate_warning(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.warns(exceptions.DuplicateWarning) as record:
+      test_field_names, expected_field_names = generate_unique_field_names_constructor(
+          field_names)
+      del test_field_names  # unused
+    number_duplicate = len(expected_field_names) - len(set(field_names))
+    assert len(record) == number_duplicate
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['UsageBeforeAssignment'],
+      prefix='field_names')
+  def test_generate_unique_field_names_duplicate_default_name_before_assignment_raises_value_error(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.raises(ValueError):
+      generate_unique_field_names_constructor(field_names=field_names)
+
+  @pytest_cases.parametrize_with_cases(
+      'field_names',
+      cases=_CASES,
+      has_tag=['UsageBeforeAssignment'],
+      prefix='field_names')
+  def test_generate_unique_field_names_multiple_duplicate_default_name_before_assignment_raises_single_value_error(
+      self,
+      field_names,
+      generate_unique_field_names_constructor,
+  ):
+    with pytest.raises(ValueError):
+      generate_unique_field_names_constructor(field_names=field_names)
 
 
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['DuplicateReservedFieldNames'],
-    prefix='field_names')
-def test_generate_unique_field_names_duplicate_reserved_name_raises_duplicate_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.DuplicateWarning):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['DuplicateReservedFieldNames'],
-    prefix='field_names')
-def test_generate_unique_field_names_multiple_duplicate_reserved_name_raises_multiple_duplicate_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.DuplicateWarning) as record:
-    test_field_names, expected_field_names = generate_unique_field_names_constructor(
-        field_names)
-    del test_field_names  # unused
-  number_duplicate = len(expected_field_names) - len(set(field_names))
-  assert len(record) == number_duplicate
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['UsageAfterAssignment'],
-    prefix='field_names')
-def test_generate_unique_field_names_duplicate_default_name_after_assignment_raises_duplicate_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.DuplicateWarning):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['UsageAfterAssignment'],
-    prefix='field_names')
-def test_generate_unique_field_names_multiple_duplicate_default_name_after_assignment_raises_multiple_duplicate_warning(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.warns(exceptions.DuplicateWarning) as record:
-    test_field_names, expected_field_names = generate_unique_field_names_constructor(
-        field_names)
-    del test_field_names  # unused
-  number_duplicate = len(expected_field_names) - len(set(field_names))
-  assert len(record) == number_duplicate
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['UsageBeforeAssignment'],
-    prefix='field_names')
-def test_generate_unique_field_names_duplicate_default_name_before_assignment_raises_value_error(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.raises(ValueError):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
-@pytest_cases.parametrize_with_cases(
-    'field_names',
-    cases=_CASES,
-    has_tag=['UsageBeforeAssignment'],
-    prefix='field_names')
-def test_generate_unique_field_names_multiple_duplicate_default_name_before_assignment_raises_single_value_error(
-    field_names,
-    generate_unique_field_names_constructor,
-):
-  with pytest.raises(ValueError):
-    generate_unique_field_names_constructor(field_names=field_names)
-
-
+@pytest.mark.slow
+@pytest.mark.io
 @pytest_cases.parametrize('field_names',
                           [None, new_field_names_remove_reserved])
 @pytest_cases.parametrize('header', [None, new_header_gaggle_format])

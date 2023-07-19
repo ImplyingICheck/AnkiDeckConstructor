@@ -39,6 +39,10 @@ pytest-mock = "^3.11.1"
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
 pythonpath = "src cases"
+markers = [
+    "slow: marks slow-running tests",
+    "io: marks tests using external IO dependencies",
+]
 
 [tool.yapfignore]
 ignore_patterns = [
